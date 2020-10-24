@@ -18,7 +18,7 @@ namespace DotnetTool
 
             // If needed, infer project type from code
             ProjectDescription projectDescription = InferProjectDescription(
-                provisioningToolOptions.ProjectTypeIdentifier,
+                provisioningToolOptions.GetProjectTypeIdentifier(),
                 provisioningToolOptions.CodeFolder);
 
             ApplicationParameters applicationParameters = InferApplicationParameters(

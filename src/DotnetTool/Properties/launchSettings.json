@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DotnetTool": {
+      "commandName": "Project",
+      "commandLineArgs": "webapi --app-owner jmprieur@microsoft.com --help "
+    }
+  }
+}
