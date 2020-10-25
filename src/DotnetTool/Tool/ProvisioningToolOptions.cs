@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using DotnetTool.DeveloperCredentials;
 
 namespace DotnetTool
 {
-    public class ProvisioningToolOptions
+    public class ProvisioningToolOptions : IDeveloperCredentialsOptions
     {
         public string CodeFolder { get; set; }
         /// <summary>
@@ -17,20 +15,18 @@ namespace DotnetTool
         /// </summary>
         public string ProjectType { get; set; }
 
-        /*
-                /// <summary>
-                /// Identifier of a project type. This is the concatenation of the framework
-                /// and the project type. This is the identifier of the extension describing 
-                /// the authentication pieces of the project
-                /// </summary>
-                public string ProjectTypeIdentifier
-                {
-                    get
-                    {
-                        return $"{LanguageOrFramework}-{ProjectType}";
-                    }
-                }
-        */
+        /// <summary>
+        /// Identifier of a project type. This is the concatenation of the framework
+        /// and the project type. This is the identifier of the extension describing 
+        /// the authentication pieces of the project
+        /// </summary>
+        public string ProjectTypeIdentifier
+        {
+            get
+            {
+                return $"{LanguageOrFramework}-{ProjectType}";
+            }
+        }
 
         /// <summary>
         /// Identity (for instance joe@cotoso.com) that is allowed to
@@ -59,8 +55,26 @@ namespace DotnetTool
         /// Display Help
         /// </summary>
         internal bool Help { get; set; }
+
+        /// <summary>
+        /// Scopes for the called web API
+        /// </summary>
+        public string CalledApiScopes { get; set; }
+
+        /// <summary>
+        /// Url for the called web API
+        /// </summary>
+        public string CalledApiUrl { get; set; }
+
+        /// <summary>
+        /// Calls Microsoft Graph
+        /// </summary>
+        public bool CallsGraph { get; set; }
     }
 
+    /// <summary>
+    /// Extension methods for ProvisioningToolOptions
+    /// </summary>
     public static class ProvisioningToolOptionsExtensions
     {
         /// <summary>

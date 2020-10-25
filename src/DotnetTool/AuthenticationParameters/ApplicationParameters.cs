@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace DotnetTool.AuthenticationParameters
 {
     public class ApplicationParameters
     {
+        /// <summary>
+        /// Application display name
+        /// </summary>
+        public string DisplayName { get; set; }
+
         /// <summary>
         /// Tenant in which the application is created
         /// </summary>
@@ -30,5 +33,10 @@ namespace DotnetTool.AuthenticationParameters
         /// API permissions
         /// </summary>
         public List<ApiPermission> ApiPermissions = new List<ApiPermission>();
+
+        /// <summary>
+        /// Description
+        /// </summary>
+        public string Description { get; set; }
     }
 }

@@ -1,0 +1,44 @@
+{
+  "Identifier": "dotnet-webapi",
+  "ProjectRelativeFolder": "",
+  "BasedOnProjectDescription": "",
+  "Files": [
+    {
+      "FileRelativePath": "appsettings.json",
+      "Properties": [
+        {
+          "Property": "AzureAd:ClientId",
+          "Represents": "Application.ClientId"
+        },
+        {
+          "Condition": "Parameter.auth == IndividualB2C",
+          "Property": "AzureAd:Domain",
+          "Represents": "Directory.Domain"
+        },
+        {
+          "Condition": "Parameter.auth == SingleOrg || Parameter.auth == MultiOrg",
+          "Property": "AzureAd:TenantId",
+          "Represents": "Directory.TenantId"
+        },
+        {
+          "Property": "AzureAd:ClientSecret",
+          "Represents": "Application.ClientSecret"
+        }
+      ]
+    },
+    {
+      "FileRelativePath": "Properties/launchSettings.json",
+      "Properties": [
+        {
+          "Property": "iisSettings:iisExpress:sslPort",
+          "Represents": "intermediate.sslPort"
+        }
+//,
+//        {
+//          "Property": "profiles:*:applicationUrl",
+//          "RepresentsAny": "intermediate.Authority"
+//        }
+      ]
+    }
+  ]
+}

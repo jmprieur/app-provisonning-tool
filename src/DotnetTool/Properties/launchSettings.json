@@ -2,7 +2,8 @@
   "profiles": {
     "DotnetTool": {
       "commandName": "Project",
-      "commandLineArgs": "webapi --app-owner jmprieur@microsoft.com --help "
+      "commandLineArgs": "webapi --username jmprieur@microsoft.com -help",
+      "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\WebAppCallsMicrosoftGraph"
     }
   }
 }

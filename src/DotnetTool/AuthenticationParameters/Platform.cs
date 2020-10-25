@@ -2,6 +2,6 @@
 {
     public class Platform
     {
-        public string Name { set; get; }
+        public PlatformType Type { set; get; }
     }
 }
