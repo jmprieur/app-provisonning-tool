@@ -5,6 +5,7 @@ using DotnetTool.DeveloperCredentials;
 using DotnetTool.MicrosoftIdentityPlatformApplication;
 using DotnetTool.Project;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DotnetTool
@@ -31,7 +32,9 @@ namespace DotnetTool
                 provisioningToolOptions, projectDescription) ;
 
             // Get developer credentials
-            TokenCredential tokenCredential = GetTokenCredential(provisioningToolOptions);
+            TokenCredential tokenCredential = GetTokenCredential(
+                provisioningToolOptions,
+                projectSettings.ApplicationParameters.TenantId);
 
             // Read or provision Microsoft identity platform application
             ApplicationParameters effectiveApplicationParameters = await ReadOrProvisionMicrosoftIdentityApplication(
@@ -48,7 +51,7 @@ namespace DotnetTool
             WriteProjectConfiguration(
                 summary, 
                 reconcialedApplicationParameters, 
-                projectDescription);
+                tokenCredential);
 
             if (reconcialedApplicationParameters != effectiveApplicationParameters)
             {
@@ -64,6 +67,10 @@ namespace DotnetTool
         private void WriteSummary(Summary summary)
         {
             Console.WriteLine("Summary");
+            foreach(Change change in summary.changes)
+            {
+                Console.WriteLine($"{change.Description}");
+            }
         }
 
         private void WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters)
@@ -71,7 +78,7 @@ namespace DotnetTool
             Console.WriteLine(nameof(WriteApplicationRegistration));
         }
 
-        private void WriteProjectConfiguration(Summary summary, ApplicationParameters reconcialedApplicationParameters, ProjectDescription projectDescription)
+        private void WriteProjectConfiguration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
         {
             Console.WriteLine(nameof(WriteProjectConfiguration));
             summary.changes.Add(new Change() { Description = $"Writing the project AppId = {reconcialedApplicationParameters.ClientId}" });
@@ -86,10 +93,17 @@ namespace DotnetTool
         private async Task<ApplicationParameters> ReadOrProvisionMicrosoftIdentityApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
             Console.WriteLine(nameof(ReadOrProvisionMicrosoftIdentityApplication));
-            ApplicationParameters currentApplicationParameters = MicrosoftIdentityPlatformApplicationManager.ReadApplication(tokenCredential, applicationParameters); 
+            ApplicationParameters currentApplicationParameters = null;
+            if (!string.IsNullOrEmpty(applicationParameters.ClientId))
+            {
+                currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.ReadApplication(tokenCredential, applicationParameters);
+                Console.Write($"Couldn't find app {applicationParameters.ClientId} in tenant {applicationParameters.TenantId}");
+            }
+
             if (currentApplicationParameters == null)
             {
                 currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.CreateNewApp(tokenCredential, applicationParameters);
+                Console.Write($"Created app {currentApplicationParameters.ClientId}");
             }
             return currentApplicationParameters;
         }
@@ -100,6 +114,7 @@ namespace DotnetTool
 
             CodeReader reader = new CodeReader();
             ProjectAuthenticationSettings projectSettings = reader.ReadFromFiles(provisioningToolOptions.CodeFolder, projectDescription);
+            projectSettings.ApplicationParameters.DisplayName ??= Path.GetFileName(provisioningToolOptions.CodeFolder);
             return projectSettings;
         }
 
@@ -109,10 +124,10 @@ namespace DotnetTool
             return projectDescriptionReader.GetProjectDescription(projectTypeIdentifier, codeFolder);
         }
 
-        private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions)
+        private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string currentApplicationTenantId)
         {
             DeveloperCredentialsReader developerCredentialsReader = new DeveloperCredentialsReader();
-            return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions);
+            return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions, currentApplicationTenantId);
         }
 
 

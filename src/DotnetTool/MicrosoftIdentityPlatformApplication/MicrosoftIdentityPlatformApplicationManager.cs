@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using DotnetTool.AuthenticationParameters;
+using DotnetTool.DeveloperCredentials;
 using Microsoft.Graph;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,8 +54,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                     return "SingleOrg";
                 case "AzureADMultipleOrgs":
                     return "MultiOrg";
-                case "MultiOrgAndPersonal":
-                    return "AADMSA";
+                case "AzureADandPersonalMicrosoftAccount":
+                    return "MultiOrgAndPersonal";
                 case "PersonalMicrosoftAccount":
                     return "Personal";
                 default:
@@ -72,9 +73,9 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                     return "AzureADMultipleOrgs";
                 case "Personal":
                     return "PersonalMicrosoftAccount";
-                case "AADMSA":
+                case "MultiOrgAndPersonal":
                 default:
-                    return "MultiOrgAndPersonal";
+                    return "AzureADandPersonalMicrosoftAccount";
             }
         }
 
@@ -82,15 +83,38 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         {
             if (graphServiceClient == null)
             {
-                graphServiceClient = new GraphServiceClient(new TokenCredentialCredentialProvider(tokenCredential));
+                graphServiceClient = new GraphServiceClient(new TokenCredentialAuthenticationProvider(tokenCredential));
             }
             return graphServiceClient;
         }
 
-        internal ApplicationParameters ReadApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
+        internal async Task<ApplicationParameters> ReadApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
-            // TODO
-            return null;
+            GetGraphServiceClient(tokenCredential);
+
+            var apps = await graphServiceClient.Applications
+                .Request()
+                .Filter($"appId eq '{applicationParameters.ClientId}'")
+                .GetAsync();
+
+            var createdApplication = apps.FirstOrDefault();
+
+            if (createdApplication == null)
+            {
+                // we should not be here: application not found in the tenant
+            }
+
+            var effectiveApplicationParameters = new ApplicationParameters
+            {
+                DisplayName = createdApplication.DisplayName,
+                ClientId = createdApplication.AppId,
+                // TODO: parse the platforms
+            };
+
+            effectiveApplicationParameters.Audience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.Audience);
+
+            return effectiveApplicationParameters;
+
         }
     }
 }

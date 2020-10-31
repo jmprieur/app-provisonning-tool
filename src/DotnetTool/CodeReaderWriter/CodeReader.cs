@@ -1,12 +1,10 @@
-﻿using DotnetTool.AuthenticationParameters;
-using DotnetTool.Project;
+﻿using DotnetTool.Project;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using System.Xml;
 using File = DotnetTool.Project.File;
 
 namespace DotnetTool.CodeReaderWriter
