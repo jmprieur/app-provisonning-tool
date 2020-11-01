@@ -3,7 +3,7 @@
 
 namespace DotnetTool.Project
 {
-    public class File
+    public class ConfigurationProperties
     {
         public static PropertyMapping[] s_emptyPropertyMappings = new PropertyMapping[0];
 

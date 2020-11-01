@@ -5,6 +5,7 @@ using DotnetTool.DeveloperCredentials;
 using DotnetTool.MicrosoftIdentityPlatformApplication;
 using DotnetTool.Project;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ namespace DotnetTool
 
         private MicrosoftIdentityPlatformApplicationManager MicrosoftIdentityPlatformApplicationManager { get; } = new MicrosoftIdentityPlatformApplicationManager();
 
+        private ProjectDescriptionReader projectDescriptionReader { get; } = new ProjectDescriptionReader();
+
         public AppProvisionningTool(ProvisioningToolOptions provisioningToolOptions)
         {
             this.provisioningToolOptions = provisioningToolOptions;
@@ -24,12 +27,14 @@ namespace DotnetTool
         internal async Task Run()
         {
             // If needed, infer project type from code
-            ProjectDescription projectDescription = GetProjectDescription(
+            ProjectDescription projectDescription = projectDescriptionReader.GetProjectDescription(
                 provisioningToolOptions.ProjectTypeIdentifier,
                 provisioningToolOptions.CodeFolder);
 
             ProjectAuthenticationSettings projectSettings = InferApplicationParameters(
-                provisioningToolOptions, projectDescription) ;
+                provisioningToolOptions,
+                projectDescription,
+                projectDescriptionReader.projectDescriptions);
 
             // Get developer credentials
             TokenCredential tokenCredential = GetTokenCredential(
@@ -108,21 +113,19 @@ namespace DotnetTool
             return currentApplicationParameters;
         }
 
-        private ProjectAuthenticationSettings InferApplicationParameters(ProvisioningToolOptions provisioningToolOptions, ProjectDescription projectDescription)
+        private ProjectAuthenticationSettings InferApplicationParameters(
+            ProvisioningToolOptions provisioningToolOptions, 
+            ProjectDescription projectDescription,
+            IEnumerable<ProjectDescription> projectDescriptions)
         {
             Console.WriteLine(nameof(InferApplicationParameters));
 
             CodeReader reader = new CodeReader();
-            ProjectAuthenticationSettings projectSettings = reader.ReadFromFiles(provisioningToolOptions.CodeFolder, projectDescription);
+            ProjectAuthenticationSettings projectSettings = reader.ReadFromFiles(provisioningToolOptions.CodeFolder, projectDescription, projectDescriptions);
             projectSettings.ApplicationParameters.DisplayName ??= Path.GetFileName(provisioningToolOptions.CodeFolder);
             return projectSettings;
         }
 
-        public ProjectDescription GetProjectDescription(string projectTypeIdentifier, string codeFolder)
-        {
-            ProjectDescriptionReader projectDescriptionReader = new ProjectDescriptionReader();
-            return projectDescriptionReader.GetProjectDescription(projectTypeIdentifier, codeFolder);
-        }
 
         private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string currentApplicationTenantId)
         {

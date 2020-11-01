@@ -1,0 +1,13 @@
+{
+  "Identifier": "dotnet-webapi",
+  "ProjectRelativeFolder": "",
+  "BasedOnProjectDescription": "dotnet-web",
+  "Files": [
+  ],
+  "MatchesForProjectType": [
+    {
+      "FileRelativePath": "Startup.cs",
+      "MatchAny": [ ".AddAzureAdBearer", ".AddMicrosoftIdentityWebApi",".AddMicrosoftIdentityWebApiAuthentication" ]
+    }
+  ]
+}

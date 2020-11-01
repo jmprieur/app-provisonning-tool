@@ -2,7 +2,6 @@
   "profiles": {
     "DotnetTool": {
       "commandName": "Project",
-      "commandLineArgs": "webapi",
       "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\WebAppCallsMicrosoftGraph"
     }
   }

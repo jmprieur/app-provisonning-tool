@@ -1,11 +1,12 @@
 ﻿using DotnetTool.Project;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using File = DotnetTool.Project.File;
+using ConfigurationProperties = DotnetTool.Project.ConfigurationProperties;
 
 namespace DotnetTool.CodeReaderWriter
 {
@@ -16,26 +17,26 @@ namespace DotnetTool.CodeReaderWriter
             ReadCommentHandling = JsonCommentHandling.Skip
         };
 
-        public ProjectAuthenticationSettings ReadFromFiles(string folderToConfigure, ProjectDescription projectDescription)
+        public ProjectAuthenticationSettings ReadFromFiles(string folderToConfigure, ProjectDescription projectDescription, IEnumerable<ProjectDescription> projectDescriptions)
         {
             ProjectAuthenticationSettings projectAuthenticationSettings = new ProjectAuthenticationSettings();
-            ProcessProject(folderToConfigure, projectDescription, projectAuthenticationSettings);
+            ProcessProject(folderToConfigure, projectDescription, projectAuthenticationSettings, projectDescriptions);
             return projectAuthenticationSettings;
         }
 
-        private static void ProcessProject(string folderToConfigure, ProjectDescription projectDescription, ProjectAuthenticationSettings projectAuthenticationSettings)
+        private static void ProcessProject(string folderToConfigure, ProjectDescription projectDescription, ProjectAuthenticationSettings projectAuthenticationSettings, IEnumerable<ProjectDescription> projectDescriptions)
         {
             string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder);
 
             // Do DO get all the project descriptions
-            foreach (File file in projectDescription.GetMergedFiles(new ProjectDescription[] { }))
+            foreach (ConfigurationProperties file in projectDescription.GetMergedFiles(projectDescriptions))
             {
                 string filePath = Path.Combine(projectPath, file.FileRelativePath).Replace('/', '\\');
                 ProcessFile(projectAuthenticationSettings, filePath, file);
             }
         }
 
-        private static void ProcessFile(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, File file)
+        private static void ProcessFile(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, ConfigurationProperties file)
         {
             Console.WriteLine($"{filePath}");
 

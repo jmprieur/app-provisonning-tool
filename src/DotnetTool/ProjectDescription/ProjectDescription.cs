@@ -12,7 +12,7 @@ namespace DotnetTool.Project
         /// <summary>
         /// Empty files
         /// </summary>
-        static File[] emptyFiles = new File[0];
+        static ConfigurationProperties[] emptyFiles = new ConfigurationProperties[0];
 
         /// <summary>
         /// Identifier of the project description.
@@ -30,11 +30,13 @@ namespace DotnetTool.Project
             return Identifier;
         }
 
-        public File[] Files { get; set; }
+        public ConfigurationProperties[] ConfigurationProperties { get; set; }
+        
+        public MatchesForProjectType[] MatchesForProjectType { get;set; }
 
         public ProjectDescription GetBasedOnProject(IEnumerable<ProjectDescription> projects)
         {
-            ProjectDescription baseProject = projects.FirstOrDefault(p => p.ProjectRelativeFolder == BasedOnProjectDescription);
+            ProjectDescription baseProject = projects.FirstOrDefault(p => p.Identifier == BasedOnProjectDescription);
             if (!string.IsNullOrEmpty(BasedOnProjectDescription) && baseProject == null)
             {
                 throw new FormatException($"In Project {ProjectRelativeFolder} BasedOn = {BasedOnProjectDescription} could not be found");
@@ -48,14 +50,14 @@ namespace DotnetTool.Project
         /// </summary>
         /// <param name="projects"></param>
         /// <returns></returns>
-        public IEnumerable<File> GetMergedFiles(IEnumerable<ProjectDescription> projects)
+        public IEnumerable<ConfigurationProperties> GetMergedFiles(IEnumerable<ProjectDescription> projects)
         {
-            IEnumerable<File> files = GetBasedOnProject(projects)?.GetMergedFiles(projects) ?? emptyFiles;
-            IEnumerable<File> allFiles = Files != null ? files.Union(Files) : files;
+            IEnumerable<ConfigurationProperties> files = GetBasedOnProject(projects)?.GetMergedFiles(projects) ?? emptyFiles;
+            IEnumerable<ConfigurationProperties> allFiles = ConfigurationProperties != null ? files.Union(ConfigurationProperties) : files;
             var allFilesGrouped = allFiles.GroupBy(f => f.FileRelativePath);
             foreach (var fileGrouping in allFilesGrouped)
             {
-                yield return new File
+                yield return new ConfigurationProperties
                 {
                     FileRelativePath = fileGrouping.Key,
                     Properties = fileGrouping.SelectMany(f => f.Properties).ToArray(),

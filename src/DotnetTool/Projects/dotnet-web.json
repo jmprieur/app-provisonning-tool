@@ -1,8 +1,8 @@
 {
-  "Identifier": "dotnet-webapi",
+  "Identifier": "dotnet-web",
   "ProjectRelativeFolder": "",
   "BasedOnProjectDescription": "",
-  "Files": [
+  "ConfigurationProperties": [
     {
       "FileRelativePath": "appsettings.json",
       "Properties": [
@@ -24,20 +24,6 @@
           "Property": "AzureAd:ClientSecret",
           "Represents": "Application.ClientSecret"
         }
-      ]
-    },
-    {
-      "FileRelativePath": "Properties/launchSettings.json",
-      "Properties": [
-        {
-          "Property": "iisSettings:iisExpress:sslPort",
-          "Represents": "intermediate.sslPort"
-        }
-//,
-//        {
-//          "Property": "profiles:*:applicationUrl",
-//          "RepresentsAny": "intermediate.Authority"
-//        }
       ]
     }
   ]

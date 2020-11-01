@@ -63,9 +63,29 @@ namespace DotnetTool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] dotnet_web {
+            get {
+                object obj = ResourceManager.GetObject("dotnet_web", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] dotnet_webapi {
             get {
                 object obj = ResourceManager.GetObject("dotnet_webapi", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] dotnet_webapp {
+            get {
+                object obj = ResourceManager.GetObject("dotnet_webapp", resourceCulture);
                 return ((byte[])(obj));
             }
         }
