@@ -11,30 +11,35 @@ namespace DotnetTool.DeveloperCredentials
 {
     public class MsalTokenCredential : TokenCredential
     {
-        public MsalTokenCredential(string tenantId, string username, string instance = "https://login.microsoftonline.com")
+        private const string RedirectUri = "http://localhost";
+
+        public MsalTokenCredential(string? tenantId, string? username, string instance = "https://login.microsoftonline.com")
         {
-            TenantId = tenantId;
+            TenantId = tenantId ?? "common";
             Instance = instance;
             Username = username;
         }
 
-        private IPublicClientApplication App { get; set; }
-        private string TenantId { get; set; }
+        private IPublicClientApplication? App { get; set; }
+        private string? TenantId { get; set; }
         private string Instance { get; set; }
-        private string Username { get; set; }
+        private string? Username { get; set; }
 
         public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
         {
             return GetTokenAsync(requestContext, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        private async Task GetOrCreateApp()
+        private async Task<IPublicClientApplication> GetOrCreateApp()
         {
             if (App == null)
             {
-                string cacheDir = Path.Combine(
-                    Environment.GetEnvironmentVariable("USERPROFILE"),
-                    @"AppData\Local\.IdentityService");
+                // On Windows, USERPROFILE is guarantied to be set
+                string userProfile = Environment.GetEnvironmentVariable("USERPROFILE")!;
+                string cacheDir = Path.Combine(userProfile, @"AppData\Local\.IdentityService");
+
+                // TODO: what about the other platforms?
+
                 var storageProperties =
                      new StorageCreationPropertiesBuilder("msal.cache", cacheDir, "1950a258-227b-4e31-a9cf-717495945fc2")
                      /*
@@ -51,21 +56,21 @@ namespace DotnetTool.DeveloperCredentials
                      .Build();
 
                 App = PublicClientApplicationBuilder.Create(storageProperties.ClientId)
-                  .WithRedirectUri("http://localhost")
+                  .WithRedirectUri(RedirectUri)
                   .Build();
 
                 // This hooks up the cross-platform cache into MSAL
                 var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
                 cacheHelper.RegisterCache(App.UserTokenCache);
-
             }
+            return App;
         }
 
         public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
         {
-            await GetOrCreateApp();
+            var app = await GetOrCreateApp();
             AuthenticationResult result;
-            var accounts = await App.GetAccountsAsync();
+            var accounts = await app.GetAccountsAsync();
             IAccount account;
 
             if (!string.IsNullOrEmpty(Username))
@@ -78,13 +83,13 @@ namespace DotnetTool.DeveloperCredentials
             }
             try
             {
-                result = await App.AcquireTokenSilent(requestContext.Scopes, account)
+                result = await app.AcquireTokenSilent(requestContext.Scopes, account)
                     .WithAuthority(Instance, TenantId)
                     .ExecuteAsync(cancellationToken);
             }
             catch (MsalUiRequiredException ex)
             {
-                result = await App.AcquireTokenInteractive(requestContext.Scopes)
+                result = await app.AcquireTokenInteractive(requestContext.Scopes)
                     .WithLoginHint(Username)
                     .WithClaims(ex.Claims)
                     .WithAuthority(Instance, TenantId)

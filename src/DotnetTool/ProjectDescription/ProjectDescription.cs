@@ -18,21 +18,35 @@ namespace DotnetTool.Project
         /// Identifier of the project description.
         /// For instance dotnet-webapi
         /// </summary>
-        public string Identifier { get; set; }
+        public string? Identifier { get; set; }
 
+        public string? ProjectRelativeFolder { get; set; }
 
-        public string ProjectRelativeFolder { get; set; }
+        public string? BasedOnProjectDescription { get; set; }
 
-        public string BasedOnProjectDescription { get; set; }
-
-        public override string ToString()
+        public override string? ToString()
         {
             return Identifier;
         }
 
-        public ConfigurationProperties[] ConfigurationProperties { get; set; }
+        /// <summary>
+        /// Is the project description valid?
+        /// </summary>
+        /// <returns></returns>
+        public bool IsValid()
+        {
+            bool isValid = !string.IsNullOrEmpty(Identifier)
+                && ProjectRelativeFolder != null
+                && (ConfigurationProperties != null || MatchesForProjectType != null)
+                && (ConfigurationProperties == null || !ConfigurationProperties.Any(c => !c.IsValid()))
+                && (MatchesForProjectType == null || !MatchesForProjectType.Any(m => !m.IsValid()));
+
+            return isValid;
+        }
+
+        public ConfigurationProperties[]? ConfigurationProperties { get; set; }
         
-        public MatchesForProjectType[] MatchesForProjectType { get;set; }
+        public MatchesForProjectType[]? MatchesForProjectType { get;set; }
 
         public ProjectDescription GetBasedOnProject(IEnumerable<ProjectDescription> projects)
         {

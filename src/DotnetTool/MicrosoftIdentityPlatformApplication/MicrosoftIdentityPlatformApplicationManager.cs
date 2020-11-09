@@ -1,6 +1,5 @@
 ﻿using Azure.Core;
 using DotnetTool.AuthenticationParameters;
-using DotnetTool.DeveloperCredentials;
 using Microsoft.Graph;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,16 +8,16 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 {
     public class MicrosoftIdentityPlatformApplicationManager
     {
-        GraphServiceClient graphServiceClient;
+        GraphServiceClient? _graphServiceClient;
 
         internal async Task<ApplicationParameters> CreateNewApp(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
-            GetGraphServiceClient(tokenCredential);
+            var graphServiceClient = GetGraphServiceClient(tokenCredential);
 
             Application application = new Application()
             {
                 DisplayName = applicationParameters.DisplayName,
-                SignInAudience = AppParameterAudienceToMicrosoftIdentityPlatformAppAudience(applicationParameters.Audience),
+                SignInAudience = AppParameterAudienceToMicrosoftIdentityPlatformAppAudience(applicationParameters.SignInAudience!),
                 Description = applicationParameters.Description
             };
 
@@ -41,7 +40,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 ClientId = createdApplication.AppId,
             };
 
-            effectiveApplicationParameters.Audience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.Audience);
+            effectiveApplicationParameters.SignInAudience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.SignInAudience!);
 
             return effectiveApplicationParameters;
         }
@@ -59,7 +58,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 case "PersonalMicrosoftAccount":
                     return "Personal";
                 default:
-                    return null;
+                    return "SingleOrg";
             }
         }
 
@@ -81,16 +80,16 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
         private GraphServiceClient GetGraphServiceClient(TokenCredential tokenCredential)
         {
-            if (graphServiceClient == null)
+            if (_graphServiceClient == null)
             {
-                graphServiceClient = new GraphServiceClient(new TokenCredentialAuthenticationProvider(tokenCredential));
+                _graphServiceClient = new GraphServiceClient(new TokenCredentialAuthenticationProvider(tokenCredential));
             }
-            return graphServiceClient;
+            return _graphServiceClient;
         }
 
         internal async Task<ApplicationParameters> ReadApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
-            GetGraphServiceClient(tokenCredential);
+            var graphServiceClient = GetGraphServiceClient(tokenCredential);
 
             var apps = await graphServiceClient.Applications
                 .Request()
@@ -101,7 +100,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
             if (createdApplication == null)
             {
-                // we should not be here: application not found in the tenant
+                return null;
             }
 
             var effectiveApplicationParameters = new ApplicationParameters
@@ -111,7 +110,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 // TODO: parse the platforms
             };
 
-            effectiveApplicationParameters.Audience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.Audience);
+            effectiveApplicationParameters.SignInAudience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.SignInAudience!);
 
             return effectiveApplicationParameters;
 

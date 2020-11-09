@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace DotnetTool
 {
-    class Program
+    public static class Program
     {
         /// <summary>
         /// Mapping between the command line and the ProvisionningToolOptions
@@ -24,10 +24,6 @@ namespace DotnetTool
         {
             // Read options
             ProvisioningToolOptions provisioningToolOptions = GetOptions(args);
-            if (string.IsNullOrEmpty(provisioningToolOptions.CodeFolder))
-            {
-                provisioningToolOptions.CodeFolder = System.IO.Directory.GetCurrentDirectory();
-            }
 
             AppProvisionningTool appProvisionningTool = new AppProvisionningTool(provisioningToolOptions);
             await appProvisionningTool.Run();
@@ -53,6 +49,19 @@ namespace DotnetTool
             provisioningToolOptions.Help = help;
 
             return provisioningToolOptions;
+        }
+
+        public static void GenerateTests()
+        {
+            string parentFolder = @"C:\gh\microsoft-identity-web\ProjectTemplates\bin\Debug\tests";
+
+            foreach (string subFolder in System.IO.Directory.GetDirectories(parentFolder))
+            {
+                foreach (string projectFolder in System.IO.Directory.GetDirectories(subFolder))
+                {
+                    System.Console.WriteLine($"[InlineData(@\"{System.IO.Path.GetFileName(subFolder)}\\{System.IO.Path.GetFileName(projectFolder)}\", {projectFolder.Contains("b2c")}, \"dotnet-WebApp\")]");
+                }
+            }
         }
     }
 }

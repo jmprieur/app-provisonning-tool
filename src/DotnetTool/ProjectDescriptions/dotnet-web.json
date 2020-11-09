@@ -1,0 +1,56 @@
+{
+  "Identifier": "dotnet-web",
+  "ProjectRelativeFolder": "",
+  "BasedOnProjectDescription": "",
+  "ConfigurationProperties": [
+    {
+      "FileRelativePath": "appsettings.json",
+      "Properties": [
+        {
+          "Property": "AzureAd:ClientId",
+          "Represents": "Application.ClientId",
+          "Sets": "IsAad"
+        },
+        {
+          "Condition": "Parameter.auth == IndividualB2C",
+          "Property": "AzureAd:Domain",
+          "Represents": "Directory.Domain",
+          "Sets": "IsAad"
+        },
+        {
+          "Condition": "Parameter.auth == SingleOrg || Parameter.auth == MultiOrg",
+          "Property": "AzureAd:TenantId",
+          "Represents": "Directory.TenantId",
+          "Sets": "IsAad"
+        },
+        {
+          "Property": "AzureAd:ClientSecret",
+          "Represents": "Application.ClientSecret",
+          "Sets": "IsAad"
+        },
+        {
+          "Property": "AzureAdB2C:ClientId",
+          "Represents": "Application.ClientId",
+          "Sets": "IsB2C"
+        },
+        {
+          "Condition": "Parameter.auth == IndividualB2C",
+          "Property": "AzureAdB2C:Domain",
+          "Represents": "Directory.Domain",
+          "Sets": "IsB2C"
+        },
+        {
+          "Condition": "Parameter.auth == SingleOrg || Parameter.auth == MultiOrg",
+          "Property": "AzureAdB2C:TenantId",
+          "Represents": "Directory.TenantId",
+          "Sets": "IsB2C"
+        },
+        {
+          "Property": "AzureAdB2C:ClientSecret",
+          "Represents": "Application.ClientSecret",
+          "Sets": "IsB2C"
+        }
+      ]
+    }
+  ]
+}

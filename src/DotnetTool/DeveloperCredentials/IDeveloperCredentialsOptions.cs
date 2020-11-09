@@ -7,12 +7,12 @@
         /// provision the application in the tenant. Optional if you want
         /// to use the developer credentials (Visual Studio)
         /// </summary>
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         /// <summary>
         /// Tenant ID of the application (optional if the user belongs to
         /// only one tenant Id)
         /// </summary>
-        public string TenantId { get; set; }
+        public string? TenantId { get; set; }
     }
 }

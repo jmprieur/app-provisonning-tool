@@ -26,13 +26,13 @@ namespace DotnetTool.CodeReaderWriter
 
         private static void ProcessProject(string folderToConfigure, ProjectDescription projectDescription, ProjectAuthenticationSettings projectAuthenticationSettings, IEnumerable<ProjectDescription> projectDescriptions)
         {
-            string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder);
+            string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder!);
 
             // Do DO get all the project descriptions
-            foreach (ConfigurationProperties file in projectDescription.GetMergedFiles(projectDescriptions))
+            foreach (ConfigurationProperties configurationProperties in projectDescription.GetMergedFiles(projectDescriptions))
             {
-                string filePath = Path.Combine(projectPath, file.FileRelativePath).Replace('/', '\\');
-                ProcessFile(projectAuthenticationSettings, filePath, file);
+                    string filePath = Path.Combine(projectPath, configurationProperties.FileRelativePath!).Replace('/', '\\');
+                    ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
             }
         }
 
@@ -48,23 +48,51 @@ namespace DotnetTool.CodeReaderWriter
 
                 foreach (PropertyMapping propertyMapping in file.Properties)
                 {
-                    string[] path = propertyMapping.Property.Split(':');
+                    string property = propertyMapping.Property!; // Valid
+                    string[] path = property.Split(':');
 
                     JsonElement element = jsonContent;
+
+                    bool found = true;
                     foreach (string segment in path)
                     {
                         JsonProperty prop = element.EnumerateObject().FirstOrDefault(e => e.Name == segment);
+                        if (prop.Value.ValueKind == JsonValueKind.Undefined)
+                        {
+                            found = false;
+                            break;
+                        }
                         element = prop.Value;
                     }
 
-                    string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
+                    if (found)
+                    {
+                        string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
 
-                    ReadCodeSetting(propertyMapping.Represents, replaceFrom, projectAuthenticationSettings);
+                        if (!string.IsNullOrEmpty(propertyMapping.Represents))
+                        {
+                            ReadCodeSetting(propertyMapping.Represents, replaceFrom, projectAuthenticationSettings);
 
-                    int index = GetIndex(element);
-                    int length = replaceFrom.Length;
+                            int index = GetIndex(element);
+                            int length = replaceFrom.Length;
 
-                    AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
+                            AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
+
+                            if (!string.IsNullOrEmpty(propertyMapping.Sets))
+                            {
+                                switch (propertyMapping.Sets)
+                                {
+                                    case "IsAad":
+                                        projectAuthenticationSettings.ApplicationParameters.IsAAD = true;
+                                        break;
+                                    case "IsB2C":
+                                        projectAuthenticationSettings.ApplicationParameters.IsB2C = true;
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    // TODO: else AddNotFound?
                 }
             }
         }
@@ -84,9 +112,9 @@ namespace DotnetTool.CodeReaderWriter
 
         private static int GetIndex(JsonElement element)
         {
-            Type type = element.GetType();
+            Type type = element.GetType()!;
             object _idx = type.GetField("_idx",
-                                        BindingFlags.NonPublic | BindingFlags.Instance).GetValue(element);
+                                        BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(element)!;
             return (int)_idx;
         }
 

@@ -81,12 +81,16 @@ namespace DotnetTool
         private void WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters)
         {
             Console.WriteLine(nameof(WriteApplicationRegistration));
+            foreach(Change change in summary.changes)
+            {
+                Console.WriteLine(change);
+            }
         }
 
         private void WriteProjectConfiguration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
         {
             Console.WriteLine(nameof(WriteProjectConfiguration));
-            summary.changes.Add(new Change() { Description = $"Writing the project AppId = {reconcialedApplicationParameters.ClientId}" });
+            summary.changes.Add(new Change($"Writing the project AppId = {reconcialedApplicationParameters.ClientId}"));
         }
 
         private ApplicationParameters Reconciliate(ApplicationParameters applicationParameters, ApplicationParameters effectiveApplicationParameters)
@@ -98,7 +102,7 @@ namespace DotnetTool
         private async Task<ApplicationParameters> ReadOrProvisionMicrosoftIdentityApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
             Console.WriteLine(nameof(ReadOrProvisionMicrosoftIdentityApplication));
-            ApplicationParameters currentApplicationParameters = null;
+            ApplicationParameters? currentApplicationParameters = null;
             if (!string.IsNullOrEmpty(applicationParameters.ClientId))
             {
                 currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.ReadApplication(tokenCredential, applicationParameters);
@@ -127,7 +131,7 @@ namespace DotnetTool
         }
 
 
-        private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string currentApplicationTenantId)
+        private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string? currentApplicationTenantId)
         {
             DeveloperCredentialsReader developerCredentialsReader = new DeveloperCredentialsReader();
             return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions, currentApplicationTenantId);

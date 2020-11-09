@@ -1,5 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,15 +12,15 @@ namespace DotnetTool.Project
     {
         public List<ProjectDescription> projectDescriptions { get; private set; } = new List<ProjectDescription>();
 
-        public ProjectDescription GetProjectDescription(string projectTypeIdentifier, string codeFolder)
+        public ProjectDescription? GetProjectDescription(string projectTypeIdentifier, string codeFolder)
         {
-            string projectTypeId = projectTypeIdentifier;
+            string? projectTypeId = projectTypeIdentifier;
             if (string.IsNullOrEmpty(projectTypeId) || projectTypeId == "dotnet-")
             {
                 projectTypeId = InferProjectType(codeFolder);
             }
 
-            return ReadProjectDescription(projectTypeId);
+            return projectTypeId != null ? ReadProjectDescription(projectTypeId) : null;
         }
 
         private ProjectDescription ReadProjectDescription(string projectTypeIdentifier)
@@ -42,21 +41,51 @@ namespace DotnetTool.Project
             return JsonSerializer.Deserialize<ProjectDescription>(jsonText, serializerOptionsWithComments);
         }
 
-        private string InferProjectType(string codeFolder)
+        private string? InferProjectType(string codeFolder)
         {
             ReadProjectDescriptions();
 
-            foreach(ProjectDescription projectDescription in projectDescriptions.Where(p => p.MatchesForProjectType!=null))
+
+            // TODO: could be both a Web app and WEB API.
+
+
+            foreach (ProjectDescription projectDescription in projectDescriptions.Where(p => p.MatchesForProjectType != null))
             {
-                foreach(MatchesForProjectType matchesForProjectType in projectDescription.MatchesForProjectType)
+                if (projectDescription.MatchesForProjectType != null)
                 {
-                    string filePath = Path.Combine(codeFolder, matchesForProjectType.FileRelativePath);
-                    string fileContent = File.ReadAllText(filePath);
-                    foreach(string match in matchesForProjectType.MatchAny)
+                    foreach (MatchesForProjectType matchesForProjectType in projectDescription.MatchesForProjectType)
                     {
-                        if (fileContent.Contains(match))
+                        if (!string.IsNullOrEmpty(matchesForProjectType.FileRelativePath))
                         {
-                            return projectDescription.Identifier;
+                            IEnumerable<string> files;
+
+                            try
+                            {
+                                files = Directory.EnumerateFiles(codeFolder, matchesForProjectType.FileRelativePath);
+                            }
+                            catch (DirectoryNotFoundException)
+                            {
+                                files = new string[0];
+                            }
+
+
+                            foreach (string filePath in files)
+                            {
+                                string fileContent = File.ReadAllText(filePath);
+                                foreach (string match in matchesForProjectType.MatchAny!) // Valid project => 
+                                {
+                                    if (fileContent.Contains(match))
+                                    {
+                                        return projectDescription.Identifier!;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (matchesForProjectType.FolderRelativePath != null
+                            && Directory.EnumerateDirectories(codeFolder, matchesForProjectType.FolderRelativePath).Any())
+                        {
+                            return projectDescription.Identifier!;
                         }
                     }
                 }
@@ -76,12 +105,17 @@ namespace DotnetTool.Project
                 .ToArray();
             foreach (PropertyInfo propertyInfo in properties)
             {
-                var content = propertyInfo.GetValue(null) as byte[];
+                byte[] content = (propertyInfo.GetValue(null) as byte[])!;
                 ProjectDescription projectDescription = ReadDescriptionFromFileContent(content);
+                if (!projectDescription.IsValid())
+                {
+                    throw new FormatException($"Resource file {propertyInfo.Name} is missing Identitier or ProjectRelativeFolder is null.");
+                }
                 projectDescriptions.Add(projectDescription);
             }
 
             // TODO: provide an extension mechanism to add such files outside the tool.
+            // In that case the validation would not be an exception? but would need to provide error messages
         }
     }
 

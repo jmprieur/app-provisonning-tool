@@ -5,13 +5,30 @@ namespace DotnetTool.Project
 {
     public class PropertyMapping
     {
-        public string Property { get; set; }
+        /// <summary>
+        /// Path to the property
+        /// </summary>
+        public string? Property { get; set; }
 
-        public string Represents { get; set; }
+        /// <summary>
+        /// Represented authentication property
+        /// </summary>
+        public string? Represents { get; set; }
 
-        public override string ToString()
+        /// <summary>
+        /// Which flag is set?
+        /// </summary>
+        public string? Sets { get; set; }
+
+        public override string? ToString()
         {
             return Property;
+        }
+
+        public bool IsValid()
+        {
+            return !string.IsNullOrEmpty(Property) 
+                && (!string.IsNullOrEmpty(Represents) || !string.IsNullOrEmpty(Sets));
         }
     }
 }

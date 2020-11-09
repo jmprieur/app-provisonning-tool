@@ -7,7 +7,9 @@ namespace DotnetTool.CodeReaderWriter
     {
         public Replacement()
         {
-
+            FilePath = string.Empty;
+            ReplaceFrom = string.Empty;
+            ReplaceBy = string.Empty;
         }
 
         public Replacement(string filePath, int index, int length, string replaceFrom, string replaceBy)

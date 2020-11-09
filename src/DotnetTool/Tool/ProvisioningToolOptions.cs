@@ -4,7 +4,7 @@ namespace DotnetTool
 {
     public class ProvisioningToolOptions : IDeveloperCredentialsOptions
     {
-        public string CodeFolder { get; set; }
+        public string CodeFolder { get; set; } = System.IO.Directory.GetCurrentDirectory();
         /// <summary>
         /// Language/Framework for the project
         /// </summary>
@@ -13,7 +13,7 @@ namespace DotnetTool
         /// <summary>
         /// Type of project for instance webapp, webapi, blazorwasm-hosted, ...
         /// </summary>
-        public string ProjectType { get; set; }
+        public string? ProjectType { get; set; }
 
         /// <summary>
         /// Identifier of a project type. This is the concatenation of the framework
@@ -33,23 +33,23 @@ namespace DotnetTool
         /// provision the application in the tenant. Optional if you want
         /// to use the developer credentials (Visual Studio)
         /// </summary>
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         /// <summary>
         /// Client secret for the app
         /// </summary>
-        public string ClientSecret { get; set; }
+        public string? ClientSecret { get; set; }
 
         /// <summary>
         /// Client ID of the application (optional)
         /// </summary>
-        public string ClientId { get; set; }
+        public string? ClientId { get; set; }
 
         /// <summary>
         /// Tenant ID of the application (optional if the user belongs to
         /// only one tenant Id)
         /// </summary>
-        public string TenantId { get; set; }
+        public string? TenantId { get; set; }
 
         /// <summary>
         /// Display Help
@@ -59,12 +59,12 @@ namespace DotnetTool
         /// <summary>
         /// Scopes for the called web API
         /// </summary>
-        public string CalledApiScopes { get; set; }
+        public string? CalledApiScopes { get; set; }
 
         /// <summary>
         /// Url for the called web API
         /// </summary>
-        public string CalledApiUrl { get; set; }
+        public string? CalledApiUrl { get; set; }
 
         /// <summary>
         /// Calls Microsoft Graph

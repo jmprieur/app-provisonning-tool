@@ -15,14 +15,14 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
     {
         public TokenCredentialAuthenticationProvider(
             TokenCredential tokenCredentials, 
-            IEnumerable<string> initialScopes = null)
+            IEnumerable<string>? initialScopes = null)
         {
             _tokenCredentials = tokenCredentials;
             _initialScopes = initialScopes ?? new string[] { "Application.ReadWrite.All" };
         }
 
-        TokenCredential _tokenCredentials;
-        IEnumerable<string> _initialScopes;
+        readonly TokenCredential _tokenCredentials;
+        readonly IEnumerable<string> _initialScopes;
 
         public async Task AuthenticateRequestAsync(HttpRequestMessage request)
         {

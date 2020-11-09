@@ -3,7 +3,14 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ProjectDescriptions\dotnet-web.json" />
+    <EmbeddedResource Include="ProjectDescriptions\dotnet-webapi.json" />
+    <EmbeddedResource Include="ProjectDescriptions\dotnet-webapp.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.2.3" />
