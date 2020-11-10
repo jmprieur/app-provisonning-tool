@@ -18,15 +18,15 @@ namespace UnitTests
         [InlineData(@"blazorserver2\blazorserver2-singleorg", false, "dotnet-webapp")]
         [InlineData(@"blazorserver2\blazorserver2-singleorg-callsgraph", false, "dotnet-webapp")]
         [InlineData(@"blazorserver2\blazorserver2-singleorg-callswebapi", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-b2c", true, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-b2c-hosted", true, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-noauth", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph-hosted", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi-hosted", false, "dotnet-webapp")]
-        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-hosted", false, "dotnet-webapp")]
+        [InlineData(@"blazorwasm2\blazorwasm2-b2c", true, "dotnet-blazorwasm")]
+        [InlineData(@"blazorwasm2\blazorwasm2-b2c-hosted", true, "dotnet-blazorwasm-hosted")]
+        [InlineData(@"blazorwasm2\blazorwasm2-noauth", false, "dotnet-blazorwasm")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg", false, "dotnet-blazorwasm")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph", false, "dotnet-blazorwasm")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph-hosted", false, "dotnet-blazorwasm-hosted")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi", false, "dotnet-blazorwasm")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi-hosted", false, "dotnet-blazorwasm-hosted")]
+        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-hosted", false, "dotnet-blazorwasm-hosted")]
         [InlineData(@"mvc2\mvc2-b2c", true, "dotnet-webapp")]
         [InlineData(@"mvc2\mvc2-b2c-callswebapi", true, "dotnet-webapp")]
         [InlineData(@"mvc2\mvc2-noauth", false, "dotnet-webapp")]
@@ -45,7 +45,7 @@ namespace UnitTests
         [InlineData(@"webapp2\webapp2-singleorg-callsgraph", false, "dotnet-webapp")]
         [InlineData(@"webapp2\webapp2-singleorg-callswebapi", false, "dotnet-webapp")]
         [Theory]
-        public void TestProjectDescriptionReader(string folderPath, bool isB2C, string projectType)
+        public void TestProjectDescriptionReader(string folderPath, bool isB2C, string expectedProjectType)
         {
             string parentFolder = @"C:\gh\microsoft-identity-web\ProjectTemplates\bin\Debug\tests";
 
@@ -53,7 +53,7 @@ namespace UnitTests
             string folder = Path.Combine(parentFolder, folderPath);
             var projectDescription = projectDescriptionReader.GetProjectDescription(string.Empty, folder);
             Assert.NotNull(projectDescription);
-            Assert.Equal(projectDescription.Identifier, projectType);
+            Assert.Equal(expectedProjectType, projectDescription.Identifier);
 
             var authenticationSettings = codeReader.ReadFromFiles(folder, projectDescription, projectDescriptionReader.projectDescriptions);
             Assert.Equal(authenticationSettings.ApplicationParameters.IsB2C, isB2C);

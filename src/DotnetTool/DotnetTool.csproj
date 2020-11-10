@@ -7,8 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ProjectDescriptions\dotnet-blazorwasm-hosted.json" />
+    <None Remove="ProjectDescriptions\dotnet-blazorwasm.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ProjectDescriptions\dotnet-blazorwasm-hosted.json" />
     <EmbeddedResource Include="ProjectDescriptions\dotnet-web.json" />
     <EmbeddedResource Include="ProjectDescriptions\dotnet-webapi.json" />
+    <EmbeddedResource Include="ProjectDescriptions\dotnet-blazorwasm.json" />
     <EmbeddedResource Include="ProjectDescriptions\dotnet-webapp.json" />
   </ItemGroup>
 

@@ -13,7 +13,7 @@
       "Sets": "IsWebApp"
     },
     {
-      "FolderRelativePath": "Pages",
+      "FileRelativePath": "Pages\\*.cshtml",
       "Sets": "IsWebApp"
     }
   ]

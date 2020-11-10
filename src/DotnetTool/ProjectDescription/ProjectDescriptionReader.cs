@@ -71,27 +71,47 @@ namespace DotnetTool.Project
 
                             foreach (string filePath in files)
                             {
-                                string fileContent = File.ReadAllText(filePath);
-                                foreach (string match in matchesForProjectType.MatchAny!) // Valid project => 
+                                // If there are matches, one at least needs to match
+                                if (matchesForProjectType.MatchAny != null)
                                 {
-                                    if (fileContent.Contains(match))
+                                    string fileContent = File.ReadAllText(filePath);
+                                    foreach (string match in matchesForProjectType.MatchAny!) // Valid project => 
                                     {
-                                        return projectDescription.Identifier!;
+                                        if (fileContent.Contains(match))
+                                        {
+                                            return projectDescription.Identifier!;
+                                        }
                                     }
+                                }
+
+                                // If MatchAny is null, then the presence of a file is enough
+                                else
+                                {
+                                    return projectDescription.Identifier!;
                                 }
                             }
                         }
 
-                        if (matchesForProjectType.FolderRelativePath != null
-                            && Directory.EnumerateDirectories(codeFolder, matchesForProjectType.FolderRelativePath).Any())
+                        if (matchesForProjectType.FolderRelativePath != null)
                         {
-                            return projectDescription.Identifier!;
+                            try
+                            {
+                                if (Directory.EnumerateDirectories(codeFolder, matchesForProjectType.FolderRelativePath).Any())
+                                {
+                                    return projectDescription.Identifier!;
+                                }
+                            }
+                            catch
+                            {
+                                // No folder
+                            }
                         }
                     }
                 }
             }
             return null;
         }
+
 
         private void ReadProjectDescriptions()
         {

@@ -40,7 +40,7 @@ namespace DotnetTool.CodeReaderWriter
         {
             Console.WriteLine($"{filePath}");
 
-            if (filePath.EndsWith(".json"))
+            if (filePath.EndsWith(".json") && File.Exists(filePath))
             {
                 string fileContent = System.IO.File.ReadAllText(filePath);
                 JsonElement jsonContent = JsonSerializer.Deserialize<JsonElement>(fileContent,

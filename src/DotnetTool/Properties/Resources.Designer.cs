@@ -63,6 +63,26 @@ namespace DotnetTool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] dotnet_blazorwasm {
+            get {
+                object obj = ResourceManager.GetObject("dotnet_blazorwasm", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] dotnet_blazorwasm_hosted {
+            get {
+                object obj = ResourceManager.GetObject("dotnet_blazorwasm_hosted", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] dotnet_web {
             get {
                 object obj = ResourceManager.GetObject("dotnet_web", resourceCulture);

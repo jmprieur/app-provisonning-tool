@@ -1,0 +1,39 @@
+{
+  "Identifier": "dotnet-blazorwasm-hosted",
+  "ProjectRelativeFolder": "",
+  "BasedOnProjectDescription": "",
+  "ConfigurationProperties": [
+    {
+      "FileRelativePath": "Client\\wwwroot\\appsettings.json",
+      "Properties": [
+        {
+          "Property": "AzureAd:ClientId",
+          "Represents": "Application.ClientId",
+          "Sets": "IsAad"
+        },
+        {
+          "Property": "AzureAd:ClientSecret",
+          "Represents": "Application.ClientSecret",
+          "Sets": "IsAad"
+        },
+        {
+          "Property": "AzureAdB2C:ClientId",
+          "Represents": "Application.ClientId",
+          "Sets": "IsB2C"
+        },
+        {
+          "Property": "AzureAdB2C:ClientSecret",
+          "Represents": "Application.ClientSecret",
+          "Sets": "IsB2C"
+        }
+      ]
+    }
+  ],
+  "MatchesForProjectType": [
+    {
+      "FileRelativePath": "Client\\Program.cs",
+      "MatchAny": [ "WebAssemblyHostBuilder.CreateDefault" ],
+      "Sets": "IsBlazor"
+    }
+  ]
+}
