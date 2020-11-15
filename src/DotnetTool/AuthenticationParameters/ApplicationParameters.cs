@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DotnetTool.AuthenticationParameters
 {
@@ -30,7 +31,7 @@ namespace DotnetTool.AuthenticationParameters
         public bool IsAAD { get; set; }
 
         /// <summary>
-        /// Is authenticated with Azure AD B2C
+        /// Is authenticated with Azure AD B2C (set by reflection)
         /// </summary>
         public bool IsB2C { get; set; }
         public bool HasAuthentication { get; set; }
@@ -39,12 +40,19 @@ namespace DotnetTool.AuthenticationParameters
 
         public bool IsWebApp { get; set; }
 
+        public bool CallsMicrosoftGraph { get; set; }
 
-        /// <summary>
-        /// Platforms
-        /// </summary>
-        public List<Platform> Platforms { get; } = new List<Platform>();
+        public bool CallsDownstreamApi { get; set; }
 
+        // ImplicityGrantSettings.EnableIdTokenIssuance
+
+        public List<string> RedirectUris { get; } = new List<string>();
+
+        public string? LogoutUrl { set; get; }
+
+        public List<string> PasswordCredentials { get; } = new List<string>();
+
+        public List<string> IdentifierUris { get; } = new List<string>();
         /// <summary>
         /// API permissions
         /// </summary>
@@ -54,5 +62,16 @@ namespace DotnetTool.AuthenticationParameters
         /// Description
         /// </summary>
         public string? Description { get; set; }
+
+        public void Sets(string propertyName)
+        {
+            var property = GetType().GetProperty(propertyName);
+            if (property == null)
+            {
+                throw new ArgumentException(propertyName);
+            }
+            Console.WriteLine($"setting {propertyName}");
+            property.SetValue(this, true);
+        }
     }
 }

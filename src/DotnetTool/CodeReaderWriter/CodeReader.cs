@@ -1,4 +1,5 @@
-﻿using DotnetTool.Project;
+﻿using DotnetTool.AuthenticationParameters;
+using DotnetTool.Project;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,7 +20,7 @@ namespace DotnetTool.CodeReaderWriter
 
         public ProjectAuthenticationSettings ReadFromFiles(string folderToConfigure, ProjectDescription projectDescription, IEnumerable<ProjectDescription> projectDescriptions)
         {
-            ProjectAuthenticationSettings projectAuthenticationSettings = new ProjectAuthenticationSettings();
+            ProjectAuthenticationSettings projectAuthenticationSettings = new ProjectAuthenticationSettings(projectDescription);
             ProcessProject(folderToConfigure, projectDescription, projectAuthenticationSettings, projectDescriptions);
             return projectAuthenticationSettings;
         }
@@ -29,10 +30,11 @@ namespace DotnetTool.CodeReaderWriter
             string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder!);
 
             // Do DO get all the project descriptions
-            foreach (ConfigurationProperties configurationProperties in projectDescription.GetMergedFiles(projectDescriptions))
+            var properties = projectDescription.GetMergedFiles(projectDescriptions).ToArray();
+            foreach (ConfigurationProperties configurationProperties in properties)
             {
-                    string filePath = Path.Combine(projectPath, configurationProperties.FileRelativePath!).Replace('/', '\\');
-                    ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
+                string filePath = Path.Combine(projectPath, configurationProperties.FileRelativePath!).Replace('/', '\\');
+                ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
             }
         }
 
@@ -40,66 +42,72 @@ namespace DotnetTool.CodeReaderWriter
         {
             Console.WriteLine($"{filePath}");
 
-            if (filePath.EndsWith(".json") && File.Exists(filePath))
+            if (File.Exists(filePath))
             {
                 string fileContent = System.IO.File.ReadAllText(filePath);
-                JsonElement jsonContent = JsonSerializer.Deserialize<JsonElement>(fileContent,
+                JsonElement jsonContent = default(JsonElement);
+
+                if (filePath.EndsWith(".json"))
+                {
+                    jsonContent = JsonSerializer.Deserialize<JsonElement>(fileContent,
                                                                                   serializerOptionsWithComments);
+                }
 
                 foreach (PropertyMapping propertyMapping in file.Properties)
                 {
-                    string property = propertyMapping.Property!; // Valid
-                    string[] path = property.Split(':');
-
-                    JsonElement element = jsonContent;
-
-                    bool found = true;
-                    foreach (string segment in path)
+                    bool found = false;
+                    string property = propertyMapping.Property;
+                    if (property != null)
                     {
-                        JsonProperty prop = element.EnumerateObject().FirstOrDefault(e => e.Name == segment);
-                        if (prop.Value.ValueKind == JsonValueKind.Undefined)
+                        string[] path = property.Split(':');
+
+                        JsonElement element = jsonContent;
+                        found = true;
+                        foreach (string segment in path)
                         {
-                            found = false;
-                            break;
-                        }
-                        element = prop.Value;
-                    }
-
-                    if (found)
-                    {
-                        string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
-
-                        if (!string.IsNullOrEmpty(propertyMapping.Represents))
-                        {
-                            ReadCodeSetting(propertyMapping.Represents, replaceFrom, projectAuthenticationSettings);
-
-                            int index = GetIndex(element);
-                            int length = replaceFrom.Length;
-
-                            AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
-
-                            if (!string.IsNullOrEmpty(propertyMapping.Sets))
+                            JsonProperty prop = element.EnumerateObject().FirstOrDefault(e => e.Name == segment);
+                            if (prop.Value.ValueKind == JsonValueKind.Undefined)
                             {
-                                switch (propertyMapping.Sets)
-                                {
-                                    case "IsAad":
-                                        projectAuthenticationSettings.ApplicationParameters.IsAAD = true;
-                                        break;
-                                    case "IsB2C":
-                                        projectAuthenticationSettings.ApplicationParameters.IsB2C = true;
-                                        break;
-                                }
+                                found = false;
+                                break;
                             }
+                            element = prop.Value;
+                        }
+
+                        if (found)
+                        {
+                            string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
+
+                            if (!string.IsNullOrEmpty(propertyMapping.Represents))
+                            {
+                                ReadCodeSetting(propertyMapping.Represents, replaceFrom, projectAuthenticationSettings);
+
+                                int index = GetIndex(element);
+                                int length = replaceFrom.Length;
+
+                                AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
+                            }
+
+
                         }
                     }
-                    // TODO: else AddNotFound?
+
+                    if (!string.IsNullOrEmpty(propertyMapping.Sets))
+                    {
+                        if (found 
+                            || (propertyMapping.MatchAny != null && propertyMapping.MatchAny.Any(m => fileContent.Contains(m))))
+                        {
+                            projectAuthenticationSettings.ApplicationParameters.Sets(propertyMapping.Sets);
+                        }
+                    }
                 }
+                // TODO: else AddNotFound?
             }
         }
 
         private static void ReadCodeSetting(string represents, string value, ProjectAuthenticationSettings projectAuthenticationSettings)
         {
-            switch(represents)
+            switch (represents)
             {
                 case "Application.ClientId":
                     projectAuthenticationSettings.ApplicationParameters.ClientId = value;

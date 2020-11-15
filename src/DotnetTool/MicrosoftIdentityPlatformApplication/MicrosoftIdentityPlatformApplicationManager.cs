@@ -21,12 +21,12 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 Description = applicationParameters.Description
             };
 
-            if (applicationParameters.Platforms.Any(p => p.Type == PlatformType.Web))
+            if (applicationParameters.IsWebApi)
             {
                 // TODO: do for Web APIs
                 application.Api = new ApiApplication()
                 {
-                     RequestedAccessTokenVersion = 2,
+                    RequestedAccessTokenVersion = 2,
                 };
             }
 
@@ -38,6 +38,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             {
                 DisplayName = createdApplication.DisplayName,
                 ClientId = createdApplication.AppId,
+                IsAAD = true,
+                IsWebApi = createdApplication.Web!=null,
             };
 
             effectiveApplicationParameters.SignInAudience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.SignInAudience!);
@@ -107,7 +109,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             {
                 DisplayName = createdApplication.DisplayName,
                 ClientId = createdApplication.AppId,
-                // TODO: parse the platforms
+                IsAAD = true,
+                IsWebApi = createdApplication.Api != null,
             };
 
             effectiveApplicationParameters.SignInAudience = MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(effectiveApplicationParameters.SignInAudience!);

@@ -9,24 +9,23 @@
         {
           "Property": "AzureAd:ClientId",
           "Represents": "Application.ClientId",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
           "Condition": "Parameter.auth == IndividualB2C",
           "Property": "AzureAd:Domain",
           "Represents": "Directory.Domain",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
-          "Condition": "Parameter.auth == SingleOrg || Parameter.auth == MultiOrg",
           "Property": "AzureAd:TenantId",
           "Represents": "Directory.TenantId",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
           "Property": "AzureAd:ClientSecret",
           "Represents": "Application.ClientSecret",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
           "Property": "AzureAdB2C:ClientId",
@@ -34,13 +33,11 @@
           "Sets": "IsB2C"
         },
         {
-          "Condition": "Parameter.auth == IndividualB2C",
           "Property": "AzureAdB2C:Domain",
           "Represents": "Directory.Domain",
           "Sets": "IsB2C"
         },
         {
-          "Condition": "Parameter.auth == SingleOrg || Parameter.auth == MultiOrg",
           "Property": "AzureAdB2C:TenantId",
           "Represents": "Directory.TenantId",
           "Sets": "IsB2C"
@@ -49,6 +46,19 @@
           "Property": "AzureAdB2C:ClientSecret",
           "Represents": "Application.ClientSecret",
           "Sets": "IsB2C"
+        }
+      ]
+    },
+    {
+      "FileRelativePath": "Startup.cs",
+      "Properties": [
+        {
+          "MatchAny": [ ".AddMicrosoftGraph", ".AddMicrosoftGraphBeta" ],
+          "Sets": "CallsMicrosoftGraph"
+        },
+        {
+          "MatchAny": [ ".EnableTokenAcquisitionToCallDownstreamApi", ".AddDownstreamWebApi" ],
+          "Sets": "CallsDownstreamApi"
         }
       ]
     }

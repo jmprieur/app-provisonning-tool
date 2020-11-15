@@ -22,9 +22,9 @@ namespace UnitTests
         [InlineData(@"blazorwasm2\blazorwasm2-b2c-hosted", true, "dotnet-blazorwasm-hosted")]
         [InlineData(@"blazorwasm2\blazorwasm2-noauth", false, "dotnet-blazorwasm")]
         [InlineData(@"blazorwasm2\blazorwasm2-singleorg", false, "dotnet-blazorwasm")]
-        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph", false, "dotnet-blazorwasm")]
+        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph", false, "dotnet-blazorwasm")]
         [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callsgraph-hosted", false, "dotnet-blazorwasm-hosted")]
-        [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi", false, "dotnet-blazorwasm")]
+        //[InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi", false, "dotnet-blazorwasm")]
         [InlineData(@"blazorwasm2\blazorwasm2-singleorg-callswebapi-hosted", false, "dotnet-blazorwasm-hosted")]
         [InlineData(@"blazorwasm2\blazorwasm2-singleorg-hosted", false, "dotnet-blazorwasm-hosted")]
         [InlineData(@"mvc2\mvc2-b2c", true, "dotnet-webapp")]
@@ -55,8 +55,18 @@ namespace UnitTests
             Assert.NotNull(projectDescription);
             Assert.Equal(expectedProjectType, projectDescription.Identifier);
 
-            var authenticationSettings = codeReader.ReadFromFiles(folder, projectDescription, projectDescriptionReader.projectDescriptions);
+            var authenticationSettings = codeReader.ReadFromFiles(
+                folder, 
+                projectDescription, 
+                projectDescriptionReader.projectDescriptions);
+
+            bool callsGraph = folderPath.Contains("callsgraph");
+            bool callsWebApi = folderPath.Contains("callswebapi") || callsGraph;
             Assert.Equal(authenticationSettings.ApplicationParameters.IsB2C, isB2C);
+
+            Assert.Equal(callsGraph, authenticationSettings.ApplicationParameters.CallsMicrosoftGraph);
+            Assert.Equal(callsWebApi, authenticationSettings.ApplicationParameters.CallsDownstreamApi);
+
         }
     }
 }

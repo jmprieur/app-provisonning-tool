@@ -21,8 +21,9 @@ namespace DotnetTool.Project
 
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(FileRelativePath) 
+            bool valid = !string.IsNullOrEmpty(FileRelativePath) 
                 && !Properties.Any(p => !p.IsValid());
+            return valid;
         }
     }
 }

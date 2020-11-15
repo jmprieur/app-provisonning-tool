@@ -15,6 +15,8 @@ namespace DotnetTool.Project
         /// </summary>
         public string? Represents { get; set; }
 
+        public string[]? MatchAny { get; set; }
+
         /// <summary>
         /// Which flag is set?
         /// </summary>
@@ -27,8 +29,8 @@ namespace DotnetTool.Project
 
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(Property) 
-                && (!string.IsNullOrEmpty(Represents) || !string.IsNullOrEmpty(Sets));
+            return (!string.IsNullOrEmpty(Property) && !string.IsNullOrEmpty(Represents))
+                 || !string.IsNullOrEmpty(Sets);
         }
     }
 }

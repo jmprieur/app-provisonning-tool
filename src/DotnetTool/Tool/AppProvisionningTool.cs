@@ -106,7 +106,10 @@ namespace DotnetTool
             if (!string.IsNullOrEmpty(applicationParameters.ClientId))
             {
                 currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.ReadApplication(tokenCredential, applicationParameters);
-                Console.Write($"Couldn't find app {applicationParameters.ClientId} in tenant {applicationParameters.TenantId}");
+                if (currentApplicationParameters == null)
+                {
+                    Console.Write($"Couldn't find app {applicationParameters.ClientId} in tenant {applicationParameters.TenantId}");
+                }
             }
 
             if (currentApplicationParameters == null)

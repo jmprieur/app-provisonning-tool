@@ -9,12 +9,12 @@
         {
           "Property": "AzureAd:ClientId",
           "Represents": "Application.ClientId",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
           "Property": "AzureAd:ClientSecret",
           "Represents": "Application.ClientSecret",
-          "Sets": "IsAad"
+          "Sets": "IsAAD"
         },
         {
           "Property": "AzureAdB2C:ClientId",
@@ -25,6 +25,19 @@
           "Property": "AzureAdB2C:ClientSecret",
           "Represents": "Application.ClientSecret",
           "Sets": "IsB2C"
+        }
+      ]
+    },
+    {
+      "FileRelativePath": "Startup.cs",
+      "Properties": [
+        {
+          "MatchAny": [ ".AddMicrosoftGraph", ".AddMicrosoftGraphBeta" ],
+          "Sets": "CallsMicrosoftGraph"
+        },
+        {
+          "MatchAny": [ ".EnableTokenAcquisitionToCallDownstreamApi", ".AddDownstreamWebApi" ],
+          "Sets": "CallsDownstreamApi"
         }
       ]
     }
