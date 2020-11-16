@@ -1,8 +1,12 @@
 {
   "profiles": {
-    "DotnetTool": {
+    "DotnetTool-webapp calls graph": {
       "commandName": "Project",
       "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\WebAppCallsMicrosoftGraph"
+    },
+    "DotnetTool-B2C web app calls web api": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\B2CWebAppCallsWebApi\\Client"
     }
   }
 }

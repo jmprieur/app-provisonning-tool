@@ -15,6 +15,8 @@ namespace DotnetTool.AuthenticationParameters
         /// </summary>
         public string? TenantId { get; set; }
 
+        public string? Domain { get; set; }
+
         /// <summary>
         /// Client ID of the application
         /// </summary>
@@ -46,7 +48,7 @@ namespace DotnetTool.AuthenticationParameters
 
         // ImplicityGrantSettings.EnableIdTokenIssuance
 
-        public List<string> RedirectUris { get; } = new List<string>();
+        public List<string> WebRedirectUris { get; } = new List<string>();
 
         public string? LogoutUrl { set; get; }
 

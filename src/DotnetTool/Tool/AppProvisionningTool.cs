@@ -39,7 +39,7 @@ namespace DotnetTool
             // Get developer credentials
             TokenCredential tokenCredential = GetTokenCredential(
                 provisioningToolOptions,
-                projectSettings.ApplicationParameters.TenantId);
+                projectSettings.ApplicationParameters.TenantId ?? projectSettings.ApplicationParameters.Domain);
 
             // Read or provision Microsoft identity platform application
             ApplicationParameters effectiveApplicationParameters = await ReadOrProvisionMicrosoftIdentityApplication(

@@ -115,6 +115,9 @@ namespace DotnetTool.CodeReaderWriter
                 case "Directory.TenantId":
                     projectAuthenticationSettings.ApplicationParameters.TenantId = value;
                     break;
+                case "Directory.Domain":
+                    projectAuthenticationSettings.ApplicationParameters.Domain = value;
+                    break;
             }
         }
 
