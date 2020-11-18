@@ -91,7 +91,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             return _graphServiceClient;
         }
 
-        internal async Task<ApplicationParameters> ReadApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
+        public async Task<ApplicationParameters?> ReadApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
             var graphServiceClient = GetGraphServiceClient(tokenCredential);
 

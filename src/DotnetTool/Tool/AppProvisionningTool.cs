@@ -24,7 +24,7 @@ namespace DotnetTool
             this.provisioningToolOptions = provisioningToolOptions;
         }
 
-        internal async Task Run()
+        public async Task Run()
         {
             // If needed, infer project type from code
             ProjectDescription projectDescription = projectDescriptionReader.GetProjectDescription(
@@ -137,7 +137,7 @@ namespace DotnetTool
         private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string? currentApplicationTenantId)
         {
             DeveloperCredentialsReader developerCredentialsReader = new DeveloperCredentialsReader();
-            return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions, currentApplicationTenantId);
+            return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions.Username, currentApplicationTenantId);
         }
 
 

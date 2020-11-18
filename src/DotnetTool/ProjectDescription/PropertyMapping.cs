@@ -16,6 +16,7 @@ namespace DotnetTool.Project
         public string? Represents { get; set; }
 
         public string[]? MatchAny { get; set; }
+        public string? Default { get; set; }
 
         /// <summary>
         /// Which flag is set?

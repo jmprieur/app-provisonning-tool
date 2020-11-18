@@ -1,16 +1,20 @@
 using DotnetTool.CodeReaderWriter;
+using DotnetTool.DeveloperCredentials;
+using DotnetTool.MicrosoftIdentityPlatformApplication;
 using DotnetTool.Project;
-using System;
 using System.IO;
 using Xunit;
 
-namespace UnitTests
+namespace Tests
 {
-    public class UnitTest1
+    public class UnitTests
     {
         readonly ProjectDescriptionReader projectDescriptionReader = new ProjectDescriptionReader();
 
         readonly CodeReader codeReader = new CodeReader();
+        readonly DeveloperCredentialsReader developerCredentialsReader = new DeveloperCredentialsReader();
+
+        readonly MicrosoftIdentityPlatformApplicationManager MicrosoftIdentityPlatformApplicationManager = new MicrosoftIdentityPlatformApplicationManager();
 
         [InlineData(@"blazorserver2\blazorserver2-noauth", false, "dotnet-webapp")]
         [InlineData(@"blazorserver2\blazorserver2-b2c", true, "dotnet-webapp")]
@@ -59,14 +63,22 @@ namespace UnitTests
                 folder, 
                 projectDescription, 
                 projectDescriptionReader.projectDescriptions);
+            var applicationParameters = authenticationSettings.ApplicationParameters;
 
             bool callsGraph = folderPath.Contains("callsgraph");
             bool callsWebApi = folderPath.Contains("callswebapi") || callsGraph;
-            Assert.Equal(authenticationSettings.ApplicationParameters.IsB2C, isB2C);
+            Assert.Equal(applicationParameters.IsB2C, isB2C);
 
-            Assert.Equal(callsGraph, authenticationSettings.ApplicationParameters.CallsMicrosoftGraph);
-            Assert.Equal(callsWebApi, authenticationSettings.ApplicationParameters.CallsDownstreamApi);
+            Assert.Equal(callsGraph, applicationParameters.CallsMicrosoftGraph);
+            Assert.Equal(callsWebApi, applicationParameters.CallsDownstreamApi);
 
+            var developerCredentials = developerCredentialsReader.GetDeveloperCredentials(
+                null,
+                applicationParameters.TenantId?? applicationParameters.Domain);
+
+            var readApplicationParameters = MicrosoftIdentityPlatformApplicationManager.ReadApplication(developerCredentials,
+                applicationParameters);
+            Assert.NotNull(readApplicationParameters);
         }
     }
 }

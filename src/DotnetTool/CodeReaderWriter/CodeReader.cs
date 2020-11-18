@@ -1,5 +1,4 @@
-﻿using DotnetTool.AuthenticationParameters;
-using DotnetTool.Project;
+﻿using DotnetTool.Project;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -80,7 +79,7 @@ namespace DotnetTool.CodeReaderWriter
 
                             if (!string.IsNullOrEmpty(propertyMapping.Represents))
                             {
-                                ReadCodeSetting(propertyMapping.Represents, replaceFrom, projectAuthenticationSettings);
+                                ReadCodeSetting(propertyMapping.Represents, replaceFrom, propertyMapping.Default, projectAuthenticationSettings);
 
                                 int index = GetIndex(element);
                                 int length = replaceFrom.Length;
@@ -92,32 +91,32 @@ namespace DotnetTool.CodeReaderWriter
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(propertyMapping.Sets))
+                    if (!string.IsNullOrEmpty(propertyMapping.Sets) && (found
+                            || (propertyMapping.MatchAny != null && propertyMapping.MatchAny.Any(m => fileContent.Contains(m)))))
                     {
-                        if (found 
-                            || (propertyMapping.MatchAny != null && propertyMapping.MatchAny.Any(m => fileContent.Contains(m))))
-                        {
-                            projectAuthenticationSettings.ApplicationParameters.Sets(propertyMapping.Sets);
-                        }
+                        projectAuthenticationSettings.ApplicationParameters.Sets(propertyMapping.Sets);
                     }
                 }
                 // TODO: else AddNotFound?
             }
         }
 
-        private static void ReadCodeSetting(string represents, string value, ProjectAuthenticationSettings projectAuthenticationSettings)
+        private static void ReadCodeSetting(string represents, string value, string? defaultValue, ProjectAuthenticationSettings projectAuthenticationSettings)
         {
-            switch (represents)
+            if (value != defaultValue)
             {
-                case "Application.ClientId":
-                    projectAuthenticationSettings.ApplicationParameters.ClientId = value;
-                    break;
-                case "Directory.TenantId":
-                    projectAuthenticationSettings.ApplicationParameters.TenantId = value;
-                    break;
-                case "Directory.Domain":
-                    projectAuthenticationSettings.ApplicationParameters.Domain = value;
-                    break;
+                switch (represents)
+                {
+                    case "Application.ClientId":
+                        projectAuthenticationSettings.ApplicationParameters.ClientId = value;
+                        break;
+                    case "Directory.TenantId":
+                        projectAuthenticationSettings.ApplicationParameters.TenantId = value;
+                        break;
+                    case "Directory.Domain":
+                        projectAuthenticationSettings.ApplicationParameters.Domain = value;
+                        break;
+                }
             }
         }
 

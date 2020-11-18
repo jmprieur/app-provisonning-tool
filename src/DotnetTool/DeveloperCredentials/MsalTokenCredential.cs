@@ -41,7 +41,11 @@ namespace DotnetTool.DeveloperCredentials
                 // TODO: what about the other platforms?
 
                 var storageProperties =
-                     new StorageCreationPropertiesBuilder("msal.cache", cacheDir, "1950a258-227b-4e31-a9cf-717495945fc2")
+                     new StorageCreationPropertiesBuilder(
+                         "msal.cache",
+                         cacheDir,
+                         "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
+                         /*"1950a258-227b-4e31-a9cf-717495945fc2"*/)
                      /*
                      .WithLinuxKeyring(
                          Config.LinuxKeyRingSchema,
