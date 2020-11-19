@@ -31,6 +31,12 @@ namespace DotnetTool
                 provisioningToolOptions.ProjectTypeIdentifier,
                 provisioningToolOptions.CodeFolder);
 
+            if (projectDescription == null)
+            {
+                Console.WriteLine("Unknown project type");
+                throw new Exception();
+            }
+
             ProjectAuthenticationSettings projectSettings = InferApplicationParameters(
                 provisioningToolOptions,
                 projectDescription,

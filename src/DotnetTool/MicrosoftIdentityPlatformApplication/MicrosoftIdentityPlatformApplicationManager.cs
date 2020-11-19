@@ -39,6 +39,10 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             if (applicationParameters.IsWebApp)
             {
                 application.Web = new WebApplication();
+                if (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
+                {
+                    application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
+                }
             }
 
             Application createdApplication = await graphServiceClient.Applications
