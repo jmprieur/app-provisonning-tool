@@ -53,7 +53,7 @@ namespace DotnetTool.CodeReaderWriter
                 // Create a list of string (roots)
                 string? iisExpressApplicationUrl = projectAuthenticationSettings.Replacements.FirstOrDefault(r => r.ReplaceBy == "iisApplicationUrl")?.ReplaceFrom;
                 string? iisExpressSslPort = projectAuthenticationSettings.Replacements.FirstOrDefault(r => r.ReplaceBy == "iisSslPort")?.ReplaceFrom;
-                if (!(string.IsNullOrEmpty(iisExpressApplicationUrl) && !string.IsNullOrEmpty(iisExpressSslPort)))
+                if (!string.IsNullOrEmpty(iisExpressApplicationUrl) && !string.IsNullOrEmpty(iisExpressSslPort))
                 {
                     // Change the port
                     string sslLauchUrl = iisExpressApplicationUrl.Replace("http://", "https://")
@@ -76,9 +76,12 @@ namespace DotnetTool.CodeReaderWriter
                 string signoutPath = "/oidc-signout";
                 if (!string.IsNullOrEmpty(signoutPath))
                 {
-                    if (signoutPath.StartsWith("/") && launchUrls.Any())
+                    if (signoutPath.StartsWith("/"))
                     {
-                        projectAuthenticationSettings.ApplicationParameters.LogoutUrl = launchUrls.First() + signoutPath;
+                        if (launchUrls.Any())
+                        {
+                            projectAuthenticationSettings.ApplicationParameters.LogoutUrl = launchUrls.First() + signoutPath;
+                        }
                     }
                     else
                     {
