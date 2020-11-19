@@ -55,14 +55,15 @@ namespace DotnetTool
             Summary summary = new Summary();
             WriteProjectConfiguration(
                 summary, 
-                reconcialedApplicationParameters, 
-                tokenCredential);
+                projectSettings,
+                reconcialedApplicationParameters);
 
             if (reconcialedApplicationParameters != effectiveApplicationParameters)
             {
                 WriteApplicationRegistration(
                     summary,
-                    reconcialedApplicationParameters);
+                    reconcialedApplicationParameters,
+                    tokenCredential);
             }
 
             // Summarizes what happened
@@ -78,19 +79,15 @@ namespace DotnetTool
             }
         }
 
-        private void WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters)
+        private void WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
         {
-            Console.WriteLine(nameof(WriteApplicationRegistration));
-            foreach(Change change in summary.changes)
-            {
-                Console.WriteLine(change);
-            }
+            summary.changes.Add(new Change($"Writing the project AppId = {reconcialedApplicationParameters.ClientId}"));
         }
 
-        private void WriteProjectConfiguration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
+        private void WriteProjectConfiguration(Summary summary, ProjectAuthenticationSettings projectSettings, ApplicationParameters reconcialedApplicationParameters)
         {
-            Console.WriteLine(nameof(WriteProjectConfiguration));
-            summary.changes.Add(new Change($"Writing the project AppId = {reconcialedApplicationParameters.ClientId}"));
+            CodeWriter codeWriter = new CodeWriter();
+            codeWriter.WriteConfiguration(summary, projectSettings.Replacements, reconcialedApplicationParameters);
         }
 
         private ApplicationParameters Reconciliate(ApplicationParameters applicationParameters, ApplicationParameters effectiveApplicationParameters)
@@ -101,7 +98,6 @@ namespace DotnetTool
 
         private async Task<ApplicationParameters> ReadOrProvisionMicrosoftIdentityApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
         {
-            Console.WriteLine(nameof(ReadOrProvisionMicrosoftIdentityApplication));
             ApplicationParameters? currentApplicationParameters = null;
             if (!string.IsNullOrEmpty(applicationParameters.ClientId))
             {
@@ -125,8 +121,6 @@ namespace DotnetTool
             ProjectDescription projectDescription,
             IEnumerable<ProjectDescription> projectDescriptions)
         {
-            Console.WriteLine(nameof(InferApplicationParameters));
-
             CodeReader reader = new CodeReader();
             ProjectAuthenticationSettings projectSettings = reader.ReadFromFiles(provisioningToolOptions.CodeFolder, projectDescription, projectDescriptions);
             projectSettings.ApplicationParameters.DisplayName ??= Path.GetFileName(provisioningToolOptions.CodeFolder);

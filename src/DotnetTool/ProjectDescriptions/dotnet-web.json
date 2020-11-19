@@ -52,6 +52,11 @@
           "Property": "AzureAdB2C:ClientSecret",
           "Represents": "Application.ClientSecret",
           "Sets": "IsB2C"
+        },
+        {
+          "Property": "AzureAdB2C:CallbackPath",
+          "Represents": "Application.CallbackPath",
+          "Default": "/signin-oidc"
         }
       ]
     },
@@ -65,6 +70,23 @@
         {
           "MatchAny": [ ".EnableTokenAcquisitionToCallDownstreamApi", ".AddDownstreamWebApi" ],
           "Sets": "CallsDownstreamApi"
+        }
+      ]
+    },
+    {
+      "FileRelativePath": "Properties\\launchSettings.json",
+      "Properties": [
+        {
+          "Property": "iisSettings:iisExpress:applicationUrl",
+          "Represents": "iisApplicationUrl"
+        },
+        {
+          "Property": "iisSettings:iisExpress:sslPort",
+          "Represents": "iisSslPort"
+        },
+        {
+          "Property": "profiles:*:applicationUrl",
+          "Represents": "profilesApplicationUrls"
         }
       ]
     }

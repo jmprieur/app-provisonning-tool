@@ -50,6 +50,8 @@ namespace DotnetTool.AuthenticationParameters
 
         public List<string> WebRedirectUris { get; } = new List<string>();
 
+        public string? CallbackPath { set; get; }
+
         public string? LogoutUrl { set; get; }
 
         public List<string> PasswordCredentials { get; } = new List<string>();
@@ -72,7 +74,6 @@ namespace DotnetTool.AuthenticationParameters
             {
                 throw new ArgumentException(propertyName);
             }
-            Console.WriteLine($"setting {propertyName}");
             property.SetValue(this, true);
         }
     }
