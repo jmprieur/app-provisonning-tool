@@ -6,12 +6,20 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Tests
 {
 
     public class E2ETests
     {
+        private readonly ITestOutputHelper testOutput;
+
+        public E2ETests(ITestOutputHelper output)
+        {
+            this.testOutput = output;
+        }
+
         //[InlineData("webapp2\\webapp2-noauth", "dotnet new webapp2")]
         [InlineData("webapp2\\webapp2-singleorg", "dotnet new webapp --auth SingleOrg")]
         //[InlineData("webapp2\\webapp2-singleorg-callsgraph", "dotnet new webapp2 --auth SingleOrg --calls-graph")]
@@ -76,12 +84,15 @@ namespace Tests
             }
             catch(Exception ex)
             {
+                testOutput.WriteLine(ex.ToString());
                 Assert.True(false);
             }
             finally
             {
                 Directory.SetCurrentDirectory(currentDirectory);
             }
+
+            testOutput.WriteLine($"See {folderToCreate}");
         }
     }
 }
