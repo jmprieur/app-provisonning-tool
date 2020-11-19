@@ -21,7 +21,7 @@ namespace DotnetTool.CodeReaderWriter
                     string replaceBy = ComputeReplacement(r.ReplaceBy, reconcialedApplicationParameters);
                     if (replaceBy != null && replaceBy!=r.ReplaceFrom)
                     {
-                        int index = fileContent.IndexOf(r.ReplaceFrom, r.Index);
+                        int index = fileContent.IndexOf(r.ReplaceFrom /*, r.Index*/);
                         if (index != -1)
                         {
                             fileContent = fileContent.Substring(0, index)

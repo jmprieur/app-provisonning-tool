@@ -7,6 +7,7 @@ namespace DotnetTool.Project
         public string? FileRelativePath { get; set; }
 
         public string[]? MatchAny { get; set; }
+        public string? Sets { get; set; }
 
         public string? FolderRelativePath { get; set; }
 

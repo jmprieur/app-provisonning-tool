@@ -64,12 +64,12 @@ namespace DotnetTool.Project
         /// </summary>
         /// <param name="projects"></param>
         /// <returns></returns>
-        public IEnumerable<ConfigurationProperties> GetMergedFiles(IEnumerable<ProjectDescription> projects)
+        public IEnumerable<ConfigurationProperties> GetMergedConfigurationProperties(IEnumerable<ProjectDescription> projects)
         {
-            IEnumerable<ConfigurationProperties> files = GetBasedOnProject(projects)?.GetMergedFiles(projects) ?? emptyFiles;
-            IEnumerable<ConfigurationProperties> allFiles = ConfigurationProperties != null ? files.Union(ConfigurationProperties) : files;
-            var allFilesGrouped = allFiles.GroupBy(f => f.FileRelativePath);
-            foreach (var fileGrouping in allFilesGrouped)
+            IEnumerable<ConfigurationProperties> configurationProperties = GetBasedOnProject(projects)?.GetMergedConfigurationProperties(projects) ?? emptyFiles;
+            IEnumerable<ConfigurationProperties> allConfigurationProperties = ConfigurationProperties != null ? configurationProperties.Union(ConfigurationProperties) : configurationProperties;
+            var allConfigurationPropertiesGrouped = allConfigurationProperties.GroupBy(f => f.FileRelativePath);
+            foreach (var fileGrouping in allConfigurationPropertiesGrouped)
             {
                 yield return new ConfigurationProperties
                 {
@@ -77,6 +77,19 @@ namespace DotnetTool.Project
                     Properties = fileGrouping.SelectMany(f => f.Properties).ToArray(),
                 };
             }
+        }
+
+        /// <summary>
+        /// Get all the files with including merged from BaseOn project recursively
+        /// merging all the properties
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <returns></returns>
+        public IEnumerable<MatchesForProjectType> GetMergedMatchesForProjectType(IEnumerable<ProjectDescription> projects)
+        {
+            IEnumerable<MatchesForProjectType> configurationProperties = GetBasedOnProject(projects)?.GetMergedMatchesForProjectType(projects) ?? new MatchesForProjectType[0];
+            IEnumerable<MatchesForProjectType> allConfigurationProperties = MatchesForProjectType != null ? configurationProperties.Union(MatchesForProjectType) : configurationProperties;
+            return allConfigurationProperties;
         }
     }
 }

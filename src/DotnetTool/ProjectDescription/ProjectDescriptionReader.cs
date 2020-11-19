@@ -49,11 +49,12 @@ namespace DotnetTool.Project
             // TODO: could be both a Web app and WEB API.
 
 
-            foreach (ProjectDescription projectDescription in projectDescriptions.Where(p => p.MatchesForProjectType != null))
+            foreach (ProjectDescription projectDescription in projectDescriptions.Where(p => p.GetMergedMatchesForProjectType(projectDescriptions) != null))
             {
+                var matchesForProjectTypes = projectDescription.GetMergedMatchesForProjectType(projectDescriptions);
                 if (projectDescription.MatchesForProjectType != null)
                 {
-                    foreach (MatchesForProjectType matchesForProjectType in projectDescription.MatchesForProjectType)
+                    foreach (MatchesForProjectType matchesForProjectType in matchesForProjectTypes)
                     {
                         if (!string.IsNullOrEmpty(matchesForProjectType.FileRelativePath))
                         {

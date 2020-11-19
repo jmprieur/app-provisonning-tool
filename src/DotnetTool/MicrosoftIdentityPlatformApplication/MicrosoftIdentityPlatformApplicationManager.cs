@@ -39,10 +39,19 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             if (applicationParameters.IsWebApp)
             {
                 application.Web = new WebApplication();
+
+                // IdToken
                 if (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
                 {
+                    application.Web.ImplicitGrantSettings = new ImplicitGrantSettings();
                     application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
                 }
+
+                // Redirect URIs
+                application.Web.RedirectUris = applicationParameters.WebRedirectUris;
+
+                // Logout URI
+                application.Web.LogoutUrl = applicationParameters.LogoutUrl;
             }
 
             Application createdApplication = await graphServiceClient.Applications
@@ -135,7 +144,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                         || (application.AppRoles != null && application.AppRoles.Any()),
                 IsWebApp = application.Web != null,
                 TenantId = tenant.Id,
-                Domain = tenant.VerifiedDomains.FirstOrDefault()?.Name,
+                Domain = tenant.VerifiedDomains.FirstOrDefault(v => v.IsDefault.HasValue && v.IsDefault.Value)?.Name,
                 CallsMicrosoftGraph = application.RequiredResourceAccess.Any(r => r.ResourceAppId == MicrosoftGraphAppId),
                 CallsDownstreamApi = application.RequiredResourceAccess.Any(r => r.ResourceAppId != MicrosoftGraphAppId),
                 LogoutUrl = application.Web?.LogoutUrl,

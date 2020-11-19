@@ -61,7 +61,7 @@ namespace Tests
             string executionFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string folderToCreate = Path.Combine(executionFolder, "Tests", folder);
             Directory.CreateDirectory(folderToCreate);
-            ProcessStartInfo processStartInfo = new ProcessStartInfo("dotnet", command.Replace("dotnet ", string.Empty)+ " --force");
+            ProcessStartInfo processStartInfo = new ProcessStartInfo("dotnet", command.Replace("dotnet ", string.Empty) + " --force");
             processStartInfo.UseShellExecute = false;
             processStartInfo.RedirectStandardOutput = true;
             processStartInfo.RedirectStandardError = true;
@@ -70,19 +70,25 @@ namespace Tests
             Process? process = Process.Start(processStartInfo);
             process.WaitForExit();
             string output = process.StandardOutput.ReadToEnd();
+            testOutput.WriteLine(output);
             string errors = process.StandardError.ReadToEnd();
+            testOutput.WriteLine(errors);
             Assert.Equal(string.Empty, errors);
 
             string currentDirectory = Directory.GetCurrentDirectory();
 
-            try 
+            try
             {
                 Directory.SetCurrentDirectory(folderToCreate);
-                 ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions();
+                ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions();
+                if (command.Contains("b2c"))
+                {
+                    provisioningToolOptions.TenantId = "fabrikamb2c.onmicrosoft.com";
+                }
                 AppProvisionningTool appProvisionningTool = new AppProvisionningTool(provisioningToolOptions);
                 await appProvisionningTool.Run();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 testOutput.WriteLine(ex.ToString());
                 Assert.True(false);

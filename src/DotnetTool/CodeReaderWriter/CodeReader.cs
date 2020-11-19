@@ -29,11 +29,20 @@ namespace DotnetTool.CodeReaderWriter
             string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder!);
 
             // Do DO get all the project descriptions
-            var properties = projectDescription.GetMergedFiles(projectDescriptions).ToArray();
+            var properties = projectDescription.GetMergedConfigurationProperties(projectDescriptions).ToArray();
             foreach (ConfigurationProperties configurationProperties in properties)
             {
                 string filePath = Path.Combine(projectPath, configurationProperties.FileRelativePath!).Replace('/', '\\');
                 ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
+            }
+
+
+            foreach(var matchesForProjectType in projectDescription.GetMergedMatchesForProjectType(projectDescriptions))
+            {
+                if (!string.IsNullOrEmpty(matchesForProjectType.Sets))
+                {
+                    projectAuthenticationSettings.ApplicationParameters.Sets(matchesForProjectType.Sets);
+                }
             }
 
             PostProcessWebUris(projectAuthenticationSettings);
@@ -57,7 +66,7 @@ namespace DotnetTool.CodeReaderWriter
                 {
                     // Change the port
                     string sslLauchUrl = iisExpressApplicationUrl.Replace("http://", "https://")
-                        .Substring(0, iisExpressApplicationUrl.LastIndexOf(":")) + ":"+ iisExpressSslPort;
+                        .Substring(0, iisExpressApplicationUrl.LastIndexOf(":")) + ":" + iisExpressSslPort;
                     launchUrls.Add(sslLauchUrl);
                 }
 
@@ -101,7 +110,7 @@ namespace DotnetTool.CodeReaderWriter
                 if (filePath.EndsWith(".json"))
                 {
                     jsonContent = JsonSerializer.Deserialize<JsonElement>(fileContent,
-                                                                                  serializerOptionsWithComments);
+                                                                          serializerOptionsWithComments);
                 }
 
                 foreach (PropertyMapping propertyMapping in file.Properties)
@@ -158,7 +167,7 @@ namespace DotnetTool.CodeReaderWriter
 
                 IEnumerable<JsonProperty> props = parentElement.EnumerateObject()
                     .Where(e => segment == "*" || e.Name == segment);
-                foreach(JsonProperty prop in props)
+                foreach (JsonProperty prop in props)
                 {
                     if (prop.Value.ValueKind != JsonValueKind.Undefined)
                     {
@@ -169,7 +178,7 @@ namespace DotnetTool.CodeReaderWriter
                         {
                             yield return new KeyValuePair<JsonElement, int>(element, index);
                         }
-                        foreach(KeyValuePair<JsonElement, int> child in FindMatchingElements(element, path.Skip(1), index))
+                        foreach (KeyValuePair<JsonElement, int> child in FindMatchingElements(element, path.Skip(1), index))
                         {
                             yield return child;
                         }
