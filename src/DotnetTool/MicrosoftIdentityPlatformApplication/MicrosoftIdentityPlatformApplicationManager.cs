@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using DotnetTool.AuthenticationParameters;
 using Microsoft.Graph;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +10,9 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
     public class MicrosoftIdentityPlatformApplicationManager
     {
         const string MicrosoftGraphAppId = "00000003-0000-0000-c000-000000000000";
+        private Guid ScopeOpenId = new Guid("37f7f235-527c-4136-accd-4a02d197296e");
+        private Guid ScopeOfflineAccess = new Guid("7427e0e9-2fba-42fe-b0c0-848c9e6a8182");
+        const string ScopeType = "Scope";
 
         GraphServiceClient? _graphServiceClient;
 
@@ -26,6 +30,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 SignInAudience = AppParameterAudienceToMicrosoftIdentityPlatformAppAudience(applicationParameters.SignInAudience!),
                 Description = applicationParameters.Description
             };
+
 
             if (applicationParameters.IsWebApi)
             {
@@ -45,6 +50,10 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 {
                     application.Web.ImplicitGrantSettings = new ImplicitGrantSettings();
                     application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
+                    if (applicationParameters.IsB2C)
+                    {
+                        application.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = true;
+                    }
                 }
 
                 // Redirect URIs
@@ -52,13 +61,87 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
                 // Logout URI
                 application.Web.LogoutUrl = applicationParameters.LogoutUrl;
+
+                // Explicit usage of MicrosoftGraph openid and offline_access, in the case
+                // of Azure AD B2C.
+                if (applicationParameters.IsB2C)
+                {
+                    application.RequiredResourceAccess = new RequiredResourceAccess[]
+                    {
+                    new RequiredResourceAccess
+                    {
+                         ResourceAppId = MicrosoftGraphAppId,
+                          ResourceAccess = new ResourceAccess[]
+                          {
+                              // openid and offline_access
+                               new ResourceAccess { Id = ScopeOpenId, Type = ScopeType},
+                               new ResourceAccess { Id = ScopeOfflineAccess, Type = ScopeType},
+                          }
+                    }
+                    };
+                }
             }
 
             Application createdApplication = await graphServiceClient.Applications
                 .Request()
                 .AddAsync(application);
 
+            // B2C does not allow user consent, and therefore we need to explicity create
+            // a service principal and permission grants
+            if (applicationParameters.IsB2C)
+            {
+                // Get the Microsoft Graph service principal
+                var graphServicePrincipal = await graphServiceClient.ServicePrincipals
+                    .Request()
+                    .Filter($"AppId eq '{MicrosoftGraphAppId}'")
+                    .GetAsync();
+
+                // Creates a service principal (needed for B2C)
+                ServicePrincipal servicePrincipal = new ServicePrincipal
+                {
+                    AppId = createdApplication.AppId,
+                };
+
+                var createdServicePrincipal = await graphServiceClient.ServicePrincipals
+                    .Request()
+                    .AddAsync(servicePrincipal);
+
+                if (applicationParameters.IsWebApp)
+                {
+                    var oAuth2PermissionGrant = new OAuth2PermissionGrant
+                    {
+                        ClientId = createdServicePrincipal.Id,
+                        ConsentType = "AllPrincipals",
+                        PrincipalId = null,
+                        ResourceId = graphServicePrincipal.FirstOrDefault().Id,
+                        Scope = "openid offline_access"
+                    };
+
+                    await graphServiceClient.Oauth2PermissionGrants
+                        .Request()
+                        .AddAsync(oAuth2PermissionGrant);
+                }
+            }
+
             var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
+
+            // Todo: can we move at creation?
+            // Add a password credential. 
+            if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
+            {
+                var passwordCredential = new PasswordCredential
+                {
+                    DisplayName = "Password created by the provisionning tool"
+                };
+
+                PasswordCredential returnedPasswordCredential = await graphServiceClient.Applications[$"{createdApplication.Id}"]
+                    .AddPassword(passwordCredential)
+                    .Request()
+                    .PostAsync();
+                effectiveApplicationParameters.PasswordCredentials.Add(returnedPasswordCredential.SecretText);
+            }
+
+
             return effectiveApplicationParameters;
         }
 

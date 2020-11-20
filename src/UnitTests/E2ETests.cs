@@ -81,7 +81,7 @@ namespace Tests
             {
                 Directory.SetCurrentDirectory(folderToCreate);
                 ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions();
-                if (command.Contains("b2c"))
+                if (folder.Contains("b2c"))
                 {
                     provisioningToolOptions.TenantId = "fabrikamb2c.onmicrosoft.com";
                 }

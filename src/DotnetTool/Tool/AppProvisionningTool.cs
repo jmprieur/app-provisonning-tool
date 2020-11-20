@@ -137,7 +137,9 @@ namespace DotnetTool
         private TokenCredential GetTokenCredential(ProvisioningToolOptions provisioningToolOptions, string? currentApplicationTenantId)
         {
             DeveloperCredentialsReader developerCredentialsReader = new DeveloperCredentialsReader();
-            return developerCredentialsReader.GetDeveloperCredentials(provisioningToolOptions.Username, currentApplicationTenantId);
+            return developerCredentialsReader.GetDeveloperCredentials(
+                provisioningToolOptions.Username, 
+                currentApplicationTenantId ?? provisioningToolOptions.TenantId);
         }
 
 
