@@ -178,6 +178,24 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             }
         }
 
+        internal async Task Unregister(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
+        {
+            var graphServiceClient = GetGraphServiceClient(tokenCredential);
+
+            var apps = await graphServiceClient.Applications
+                .Request()
+                .Filter($"appId eq '{applicationParameters.ClientId}'")
+                .GetAsync();
+
+            var readApplication = apps.FirstOrDefault();
+            if (readApplication != null)
+            {
+                await graphServiceClient.Applications[$"{readApplication.Id}"]
+                    .Request()
+                    .DeleteAsync();
+            }
+        }
+
         private GraphServiceClient GetGraphServiceClient(TokenCredential tokenCredential)
         {
             if (_graphServiceClient == null)

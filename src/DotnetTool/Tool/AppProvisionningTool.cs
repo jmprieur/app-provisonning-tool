@@ -7,6 +7,7 @@ using DotnetTool.Project;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 
 namespace DotnetTool
@@ -47,10 +48,19 @@ namespace DotnetTool
                 provisioningToolOptions,
                 projectSettings.ApplicationParameters.TenantId ?? projectSettings.ApplicationParameters.Domain);
 
+            if (provisioningToolOptions.Unregister)
+            {
+                await UnregisterApplication(tokenCredential, projectSettings.ApplicationParameters);
+                return;
+            }
+
             // Read or provision Microsoft identity platform application
             ApplicationParameters effectiveApplicationParameters = await ReadOrProvisionMicrosoftIdentityApplication(
                 tokenCredential, 
                 projectSettings.ApplicationParameters);
+
+
+
 
             // Reconciliate code configuration and app registration
             ApplicationParameters reconcialedApplicationParameters = Reconciliate(
@@ -114,7 +124,7 @@ namespace DotnetTool
                 }
             }
 
-            if (currentApplicationParameters == null)
+            if (currentApplicationParameters == null && !provisioningToolOptions.Unregister)
             {
                 currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.CreateNewApp(tokenCredential, applicationParameters);
                 Console.Write($"Created app {currentApplicationParameters.ClientId}");
@@ -142,6 +152,9 @@ namespace DotnetTool
                 currentApplicationTenantId ?? provisioningToolOptions.TenantId);
         }
 
-
+        private async Task UnregisterApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
+        {
+            await MicrosoftIdentityPlatformApplicationManager.Unregister(tokenCredential, applicationParameters);
+        }
     }
 }

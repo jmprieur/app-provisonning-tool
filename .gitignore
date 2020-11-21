@@ -6,3 +6,4 @@
 bin
 obj
 /src/DotnetTool/TestResults
+/src/DotnetTool/nupkg

@@ -18,9 +18,11 @@ namespace DotnetTool
                 {"--client-secret", nameof(ProvisioningToolOptions.ClientSecret)},
                 {"--client-id", nameof(ProvisioningToolOptions.ClientId)},
                 {"--tenant-id", nameof(ProvisioningToolOptions.TenantId)},
+                {"--project-type", nameof(ProvisioningToolOptions.ProjectType)},
+                {"--unregister", nameof(ProvisioningToolOptions.Unregister)},
             };
    
-        static async Task Main(string[] args)
+        static public async Task Main(string[] args)
         {
             // Read options
             ProvisioningToolOptions provisioningToolOptions = GetOptions(args);
@@ -42,10 +44,7 @@ namespace DotnetTool
             ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions();
             ConfigurationBinder.Bind(configuration, provisioningToolOptions);
 
-            string? projectType = args.FirstOrDefault(arg => !arg.StartsWith("--"));
             bool help = args.Any(arg => !arg.StartsWith("--help"));
-
-            provisioningToolOptions.ProjectType = projectType;
             provisioningToolOptions.Help = help;
 
             return provisioningToolOptions;

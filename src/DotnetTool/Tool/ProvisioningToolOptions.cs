@@ -56,6 +56,8 @@ namespace DotnetTool
         /// </summary>
         internal bool Help { get; set; }
 
+        public bool Unregister { get; set; }
+
         /// <summary>
         /// Scopes for the called web API
         /// </summary>

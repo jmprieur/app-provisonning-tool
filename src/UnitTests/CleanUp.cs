@@ -1,26 +1,17 @@
-﻿
-using DotnetTool;
+﻿using DotnetTool;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Tests
 {
-
-    public class E2ETests
+    public class CleanUp
     {
-        private readonly ITestOutputHelper testOutput;
-
-        public E2ETests(ITestOutputHelper output)
-        {
-            this.testOutput = output;
-        }
-
         //[InlineData("webapp2\\webapp2-noauth", "dotnet new webapp2")]
         [InlineData("webapp2\\webapp2-singleorg", "dotnet new webapp --auth SingleOrg")]
         [InlineData("webapp2\\webapp2-singleorg-callsgraph", "dotnet new webapp --auth SingleOrg --calls-graph")]
@@ -55,15 +46,13 @@ namespace Tests
         //[InlineData("blazorwasm2\\blazorwasm2-b2c", "dotnet new blazorwasm2 --auth IndividualB2C")]
         //[InlineData("blazorwasm2\\blazorwasm2-b2c-hosted", "dotnet new blazorwasm2 --auth IndividualB2C  --hosted")]
         //[InlineData("blazorwasm2\\blazorwasm2-b2c-callswebapi-hosted", "dotnet new blazorwasm2 --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\" --hosted")]
-        [Theory]
-        public async Task TestEndToEnd(string folder, string command)
+        //[Theory()]
+        [Theory(Skip = "run manually")]
+        public async Task CleanupApp(string folder, string command)
         {
             // Create the folder
             string executionFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string folderToCreate = Path.Combine(executionFolder, "Tests", folder);
-
-            // dotnet new
-            CreateProject(command, folderToCreate);
 
             string currentDirectory = Directory.GetCurrentDirectory();
 
@@ -78,42 +67,15 @@ namespace Tests
                     args.Add("--tenant-id");
                     args.Add("fabrikamb2c.onmicrosoft.com");
                 }
+                args.Add("--unregister");
+                args.Add("true");
+
                 await Program.Main(args.ToArray());
-            }
-            catch (Exception ex)
-            {
-                testOutput.WriteLine(ex.ToString());
-                Assert.True(false);
             }
             finally
             {
                 Directory.SetCurrentDirectory(currentDirectory);
             }
-
-            testOutput.WriteLine($"{folderToCreate}");
-        }
-
-        /// <summary>
-        /// Create the test project
-        /// </summary>
-        /// <param name="command"></param>
-        /// <param name="folderToCreate"></param>
-        private void CreateProject(string command, string folderToCreate)
-        {
-            Directory.CreateDirectory(folderToCreate);
-            ProcessStartInfo processStartInfo = new ProcessStartInfo("dotnet", command.Replace("dotnet ", string.Empty) + " --force");
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.RedirectStandardError = true;
-            Environment.GetEnvironmentVariables();
-            processStartInfo.WorkingDirectory = folderToCreate;
-            Process? process = Process.Start(processStartInfo);
-            process.WaitForExit();
-            string output = process.StandardOutput.ReadToEnd();
-            testOutput.WriteLine(output);
-            string errors = process.StandardError.ReadToEnd();
-            testOutput.WriteLine(errors);
-            Assert.Equal(string.Empty, errors);
         }
     }
 }
