@@ -73,10 +73,14 @@ namespace Tests
                 Directory.SetCurrentDirectory(folderToCreate);
 
                 List<string> args = new List<string>();
+                args.Add("--tenant-id");
                 if (folder.Contains("b2c"))
                 {
-                    args.Add("--tenant-id");
                     args.Add("fabrikamb2c.onmicrosoft.com");
+                }
+                else
+                {
+                    args.Add("testprovisionningtool.onmicrosoft.com");
                 }
                 await Program.Main(args.ToArray());
             }

@@ -37,7 +37,7 @@ namespace DotnetTool.CodeReaderWriter
             }
 
 
-            foreach(var matchesForProjectType in projectDescription.GetMergedMatchesForProjectType(projectDescriptions))
+            foreach (var matchesForProjectType in projectDescription.GetMergedMatchesForProjectType(projectDescriptions))
             {
                 if (!string.IsNullOrEmpty(matchesForProjectType.Sets))
                 {
@@ -65,8 +65,21 @@ namespace DotnetTool.CodeReaderWriter
                 if (!string.IsNullOrEmpty(iisExpressApplicationUrl) && !string.IsNullOrEmpty(iisExpressSslPort))
                 {
                     // Change the port
-                    string sslLauchUrl = iisExpressApplicationUrl.Replace("http://", "https://")
-                        .Substring(0, iisExpressApplicationUrl.LastIndexOf(":")) + ":" + iisExpressSslPort;
+                    Uri url = new Uri(iisExpressApplicationUrl);
+                    string sslLauchUrl;
+
+                    if (url.Scheme == "https" || url.Port == 0)
+                    {
+                        sslLauchUrl = iisExpressApplicationUrl;
+                    }
+                    else
+                    {
+                        sslLauchUrl = "https://" + url.Host + ":" + iisExpressSslPort + url.PathAndQuery;
+                        if (!iisExpressApplicationUrl.EndsWith('/'))
+                        {
+                            sslLauchUrl = sslLauchUrl.TrimEnd('/');
+                        }
+                    }
                     launchUrls.Add(sslLauchUrl);
                 }
 

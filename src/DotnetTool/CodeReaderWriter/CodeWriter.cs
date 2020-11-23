@@ -62,6 +62,9 @@ namespace DotnetTool.CodeReaderWriter
                 case "Directory.Domain":
                     replacement = reconcialedApplicationParameters.Domain;
                     break;
+                case "Application.CallbackPath":
+                    replacement = reconcialedApplicationParameters.CallbackPath;
+                    break;
                 case "profilesApplicationUrls":
                 case "iisSslPort":
                 case "iisApplicationUrl":
