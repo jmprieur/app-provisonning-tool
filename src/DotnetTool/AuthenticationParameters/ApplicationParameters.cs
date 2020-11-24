@@ -99,6 +99,9 @@ namespace DotnetTool.AuthenticationParameters
         /// </summary>
         public string? Description { get; set; }
 
+        // SecretsId of the csproj
+        public string SecretsId { get; internal set; }
+
         /// <summary>
         /// Sets a bool propery (from its name)
         /// </summary>

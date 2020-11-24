@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Xml;
 using ConfigurationProperties = DotnetTool.Project.ConfigurationProperties;
 
 namespace DotnetTool.CodeReaderWriter
@@ -32,7 +33,7 @@ namespace DotnetTool.CodeReaderWriter
             var properties = projectDescription.GetMergedConfigurationProperties(projectDescriptions).ToArray();
             foreach (ConfigurationProperties configurationProperties in properties)
             {
-                string filePath = Path.Combine(projectPath, configurationProperties.FileRelativePath!).Replace('/', '\\');
+                string filePath = Directory.EnumerateFiles(projectPath, configurationProperties.FileRelativePath!).FirstOrDefault();
                 ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
             }
 
@@ -119,11 +120,17 @@ namespace DotnetTool.CodeReaderWriter
             {
                 string fileContent = System.IO.File.ReadAllText(filePath);
                 JsonElement jsonContent = default(JsonElement);
+                XmlDocument xmlDocument = null;
 
                 if (filePath.EndsWith(".json"))
                 {
                     jsonContent = JsonSerializer.Deserialize<JsonElement>(fileContent,
                                                                           serializerOptionsWithComments);
+                }
+                else if (filePath.EndsWith(".csproj"))
+                {
+                    xmlDocument = new XmlDocument();
+                    xmlDocument.Load(filePath);
                 }
 
                 foreach (PropertyMapping propertyMapping in file.Properties)
@@ -134,23 +141,27 @@ namespace DotnetTool.CodeReaderWriter
                     {
                         string[] path = property.Split(':');
 
-                        IEnumerable<KeyValuePair<JsonElement, int>> elements = FindMatchingElements(jsonContent, path, 0);
-                        foreach (var pair in elements)
+                        if (filePath.EndsWith(".json"))
                         {
-                            JsonElement element = pair.Key;
-                            int index = pair.Value;
-                            found = true;
-                            string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
-
-                            if (!string.IsNullOrEmpty(propertyMapping.Represents))
+                            IEnumerable<KeyValuePair<JsonElement, int>> elements = FindMatchingElements(jsonContent, path, 0);
+                            foreach (var pair in elements)
                             {
-                                ReadCodeSetting(propertyMapping.Represents, replaceFrom, propertyMapping.Default, projectAuthenticationSettings);
-                                int length = replaceFrom.Length;
+                                JsonElement element = pair.Key;
+                                int index = pair.Value;
+                                found = true;
+                                string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
 
-                                AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
+                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, index, replaceFrom);
                             }
+                        }
 
-
+                        if (xmlDocument != null)
+                        {
+                            XmlNode node = FindMatchingElement(xmlDocument, path);
+                            if (node!=null)
+                            {
+                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, 0, node.InnerText);
+                            }
                         }
                     }
 
@@ -161,6 +172,17 @@ namespace DotnetTool.CodeReaderWriter
                     }
                 }
                 // TODO: else AddNotFound?
+            }
+        }
+
+        private static void UpdatePropertyRepesents(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, PropertyMapping propertyMapping, int index, string replaceFrom)
+        {
+            if (!string.IsNullOrEmpty(propertyMapping.Represents))
+            {
+                ReadCodeSetting(propertyMapping.Represents, replaceFrom, propertyMapping.Default, projectAuthenticationSettings);
+                int length = replaceFrom.Length;
+
+                AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
             }
         }
 
@@ -200,6 +222,13 @@ namespace DotnetTool.CodeReaderWriter
             }
         }
 
+        private static XmlNode FindMatchingElement(XmlDocument parentElement, IEnumerable<string> path)
+        {
+            string xPath = "/" + string.Join("/", path);
+            XmlNode node = parentElement.SelectSingleNode(xPath);
+            return node;
+        }
+
         private static void ReadCodeSetting(string represents, string value, string? defaultValue, ProjectAuthenticationSettings projectAuthenticationSettings)
         {
             if (value != defaultValue)
@@ -217,6 +246,9 @@ namespace DotnetTool.CodeReaderWriter
                         break;
                     case "Directory.Domain":
                         projectAuthenticationSettings.ApplicationParameters.Domain = value;
+                        break;
+                    case "secretsId":
+                        projectAuthenticationSettings.ApplicationParameters.SecretsId = value;
                         break;
                 }
             }

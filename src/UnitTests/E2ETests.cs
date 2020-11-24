@@ -62,8 +62,14 @@ namespace Tests
             string executionFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string folderToCreate = Path.Combine(executionFolder, "Tests", folder);
 
-            // dotnet new
-            CreateProject(command, folderToCreate);
+            // dotnet new command to create the project
+            RunProcess(command, folderToCreate, " --force");
+
+            // Add a secret if needed
+            if (command.Contains("--calls"))
+            {
+                RunProcess("dotnet user-secrets init", folderToCreate);
+            }
 
             string currentDirectory = Directory.GetCurrentDirectory();
 
@@ -102,10 +108,10 @@ namespace Tests
         /// </summary>
         /// <param name="command"></param>
         /// <param name="folderToCreate"></param>
-        private void CreateProject(string command, string folderToCreate)
+        private void RunProcess(string command, string folderToCreate, string postFix="")
         {
             Directory.CreateDirectory(folderToCreate);
-            ProcessStartInfo processStartInfo = new ProcessStartInfo("dotnet", command.Replace("dotnet ", string.Empty) + " --force");
+            ProcessStartInfo processStartInfo = new ProcessStartInfo("dotnet", command.Replace("dotnet ", string.Empty) + postFix);
             processStartInfo.UseShellExecute = false;
             processStartInfo.RedirectStandardOutput = true;
             processStartInfo.RedirectStandardError = true;

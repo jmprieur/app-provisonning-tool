@@ -93,6 +93,15 @@
           "Represents": "profilesApplicationUrls"
         }
       ]
+    },
+    {
+      "FileRelativePath": "*.csproj",
+      "Properties": [
+        {
+          "Property": "Project:PropertyGroup:UserSecretsId",
+          "Represents": "secretsId"
+        }
+      ]
     }
   ]
 }

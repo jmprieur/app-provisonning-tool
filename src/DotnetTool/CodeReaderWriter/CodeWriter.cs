@@ -36,7 +36,7 @@ namespace DotnetTool.CodeReaderWriter
                 if (updated)
                 {
                     // Keep a copy of the original
-                    if (!File.Exists(filePath))
+                    if (!File.Exists(filePath + "%"))
                     {
                         File.Copy(filePath, filePath + "%");
                     }
@@ -51,7 +51,30 @@ namespace DotnetTool.CodeReaderWriter
             switch(replaceBy)
             {
                 case "Application.ClientSecret":
-                    replacement = "Application.ClientSecret";
+                    string password = reconcialedApplicationParameters.PasswordCredentials.LastOrDefault();
+                    if (!string.IsNullOrEmpty(reconcialedApplicationParameters.SecretsId))
+                    {
+                        // TODO: adapt for Linux: https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-5.0&tabs=windows#how-the-secret-manager-tool-works
+                        string path = Path.Combine(
+                            Environment.GetEnvironmentVariable("UserProfile"),
+                            @"AppData\Roaming\Microsoft\UserSecrets\",
+                            reconcialedApplicationParameters.SecretsId,
+                            "secrets.json");
+                        if (!File.Exists(path))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(path));
+                            File.WriteAllText(path, $"{{\n    \"AzureAd:ClientSecret\": \"{password}\"\n}}");
+                            replacement = "See user secrets";
+                        }
+                        else
+                        {
+                            replacement = password;
+                        }
+                    }
+                    else
+                    {
+                        replacement = password;
+                    }
                     break;
                 case "Application.ClientId":
                     replacement = reconcialedApplicationParameters.ClientId;
@@ -69,6 +92,9 @@ namespace DotnetTool.CodeReaderWriter
                 case "iisSslPort":
                 case "iisApplicationUrl":
                     replacement = null;
+                    break;
+                case "secretsId":
+                    replacement = reconcialedApplicationParameters.SecretsId;
                     break;
                 default:
                     Console.WriteLine($"{replaceBy} not known");
