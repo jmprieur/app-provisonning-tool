@@ -2,11 +2,17 @@
   "profiles": {
     "DotnetTool-webapp calls graph": {
       "commandName": "Project",
+      "commandLineArgs": "--tenant-id testprovisionningtool.onmicrosoft.com",
       "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\WebAppCallsMicrosoftGraph"
     },
     "DotnetTool-B2C web app calls web api": {
       "commandName": "Project",
       "workingDirectory": "C:\\gh\\microsoft-identity-web\\tests\\B2CWebAppCallsWebApi\\Client"
+    },
+    "webapi2-singleorg": {
+      "commandName": "Project",
+      "commandLineArgs": "--tenant-id testprovisionningtool.onmicrosoft.com",
+      "workingDirectory": "C:\\Users\\jmprieur\\source\\repos\\github\\jmprieur\\app-provisonning-tool\\src\\UnitTests\\bin\\Debug\\net5.0\\Tests\\webapi2\\webapi2-singleorg"
     }
   }
 }

@@ -2,6 +2,7 @@
 using DotnetTool.AuthenticationParameters;
 using Microsoft.Graph;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -122,6 +123,33 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                         .AddAsync(oAuth2PermissionGrant);
                 }
             }
+
+            if (createdApplication.Api != null && createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any())
+            {
+                var updatedApp = new Application
+                {
+                    IdentifierUris = new[] { $"api://{createdApplication.AppId}" },
+                };
+                var scopes = createdApplication.Api.Oauth2PermissionScopes?.ToList() ?? new List<PermissionScope>();
+                var newScope = new PermissionScope
+                {
+                    Id = Guid.NewGuid(),
+                    AdminConsentDescription = "Allows the app to access the web API on behalf of the signed-in user",
+                    AdminConsentDisplayName = "Access the API on behalf of a user",
+                    Type = "Admin",
+                    IsEnabled = true,
+                    UserConsentDescription = "Allows this app to access the web API on your behalf",
+                    UserConsentDisplayName = "Access the API on your behalf",
+                    Value = "access_as_user",
+                };
+                scopes.Add(newScope);
+                updatedApp.Api = new ApiApplication { Oauth2PermissionScopes = scopes };
+
+                await graphServiceClient.Applications[createdApplication.Id]
+                    .Request()
+                    .UpdateAsync(updatedApp);
+            }
+
 
             var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
 
