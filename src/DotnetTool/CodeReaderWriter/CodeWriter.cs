@@ -96,6 +96,13 @@ namespace DotnetTool.CodeReaderWriter
                 case "secretsId":
                     replacement = reconcialedApplicationParameters.SecretsId;
                     break;
+                case "Application.Authority":
+                    replacement = reconcialedApplicationParameters.Authority;
+                    break;
+                case "MsalAuthenticationOptions":
+                    replacement = reconcialedApplicationParameters.MsalAuthenticationOptions +
+                        "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
+                    break;
                 default:
                     Console.WriteLine($"{replaceBy} not known");
                     break;

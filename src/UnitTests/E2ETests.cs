@@ -22,31 +22,31 @@ namespace Tests
         }
 
         //[InlineData("webapp2\\webapp2-noauth", "dotnet new webapp2")]
-        [InlineData("webapp2\\webapp2-singleorg", "dotnet new webapp --auth SingleOrg")]
-        [InlineData("webapp2\\webapp2-singleorg-callsgraph", "dotnet new webapp --auth SingleOrg --calls-graph")]
+        [InlineData("webapp\\webapp-singleorg", "dotnet new webapp --auth SingleOrg")]
+        [InlineData("webapp\\webapp-singleorg-callsgraph", "dotnet new webapp --auth SingleOrg --calls-graph")]
         //[InlineData("webapp2\\webapp2-singleorg-callswebapi", "dotnet new webapp2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
-        [InlineData("webapp2\\webapp2-b2c", "dotnet new webapp --auth IndividualB2C")]
+        [InlineData("webapp\\webapp-b2c", "dotnet new webapp --auth IndividualB2C")]
         //[InlineData("webapp2\\webapp2-b2c-callswebapi", "dotnet new webapp2 --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\"")]
         //[InlineData("webapi2\\webapi2-noauth", "dotnet new webapi2")]
-        [InlineData("webapi2\\webapi2-singleorg", "dotnet new webapi --auth SingleOrg")]
-        //[InlineData("webapi2\\webapi2-singleorg-callsgraph", "dotnet new webapi2 --auth SingleOrg --calls-graph")]
+        [InlineData("webapi\\webapi-singleorg", "dotnet new webapi --auth SingleOrg")]
+        [InlineData("webapi\\webapi-singleorg-callsgraph", "dotnet new webapi --auth SingleOrg --calls-graph")]
         //[InlineData("webapi2\\webapi2-singleorg-callswebapi", "dotnet new webapi2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
-        [InlineData("webapi2\\webapi2-b2c", "dotnet new webapi --auth IndividualB2C")]
+        [InlineData("webapi\\webapi-b2c", "dotnet new webapi --auth IndividualB2C")]
         //[InlineData("webapi2\\webapi2-b2c-callswebapi", "dotnet new webapi2 --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\"")]
         //[InlineData("mvc2\\mvc2-noauth", "dotnet new mvc2")]
-        [InlineData("mvc2\\mvc2-singleorg", "dotnet new mvc --auth SingleOrg")]
+        [InlineData("mvc\\mvc-singleorg", "dotnet new mvc --auth SingleOrg")]
         //[InlineData("mvc2\\mvc2-singleorg-callsgraph", "dotnet new mvc2 --auth SingleOrg --calls-graph")]
-        //[InlineData("mvc2\\mvc2-singleorg-callswebapi", "dotnet new mvc2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
-        [InlineData("mvc2\\mvc2-b2c", "dotnet new mvc --auth IndividualB2C")]
+        // [InlineData("mvc\\mvc-singleorg-callswebapi", "dotnet new mvc --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
+        [InlineData("mvc\\mvc-b2c", "dotnet new mvc --auth IndividualB2C")]
         //[InlineData("mvc2\\mvc2-b2c-callswebapi", "dotnet new mvc2 --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\"")]
         //[InlineData("blazorserver2\\blazorserver2-noauth", "dotnet new blazorserver2")]
-        //[InlineData("blazorserver2\\blazorserver2-singleorg", "dotnet new blazorserver2 --auth SingleOrg")]
-        //[InlineData("blazorserver2\\blazorserver2-singleorg-callsgraph", "dotnet new blazorserver2 --auth SingleOrg --calls-graph")]
+        [InlineData("blazorserver\\blazorserver-singleorg", "dotnet new blazorserver --auth SingleOrg")]
+        [InlineData("blazorserver\\blazorserver-singleorg-callsgraph", "dotnet new blazorserver --auth SingleOrg --calls-graph")]
         //[InlineData("blazorserver2\\blazorserver2-singleorg-callswebapi", "dotnet new blazorserver2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
-        //[InlineData("blazorserver2\\blazorserver2-b2c", "dotnet new blazorserver2 --auth IndividualB2C")]
+        [InlineData("blazorserver\\blazorserver-b2c", "dotnet new blazorserver --auth IndividualB2C")]
         //[InlineData("blazorserver2\\blazorserver2-b2c-callswebapi", "dotnet new blazorserver2 --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\"")]
         //[InlineData("blazorwasm2\\blazorwasm2-noauth", "dotnet new blazorwasm2")]
-        //[InlineData("blazorwasm2\\blazorwasm2-singleorg", "dotnet new blazorwasm2 --auth SingleOrg")]
+        [InlineData("blazorwasm\\blazorwasm-singleorg", "dotnet new blazorwasm --auth SingleOrg")]
         //[InlineData("blazorwasm2\\blazorwasm2-singleorg-callsgraph", "dotnet new blazorwasm2 --auth SingleOrg --calls-graph")]
         //[InlineData("blazorwasm2\\blazorwasm2-singleorg-callswebapi", "dotnet new blazorwasm2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
         //[InlineData("blazorwasm2\\blazorwasm2-singleorg-hosted", "dotnet new blazorwasm2 --auth SingleOrg  --hosted")]
@@ -68,7 +68,14 @@ namespace Tests
             // Add a secret if needed
             if (command.Contains("--calls"))
             {
-                RunProcess("dotnet user-secrets init", folderToCreate);
+                try
+                {
+                    RunProcess("dotnet user-secrets init", folderToCreate);
+                }
+                catch
+                {
+                    // Silent catch
+                }
             }
 
             string currentDirectory = Directory.GetCurrentDirectory();

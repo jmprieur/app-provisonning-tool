@@ -17,6 +17,8 @@ namespace DotnetTool.AuthenticationParameters
 
         public string? Domain { get; set; }
 
+        public string? Authority { get; set; }
+
         /// <summary>
         /// Client ID of the application
         /// </summary>
@@ -101,6 +103,12 @@ namespace DotnetTool.AuthenticationParameters
 
         // SecretsId of the csproj
         public string SecretsId { get; internal set; }
+
+        public string MsalAuthenticationOptions { get; set; }
+
+
+
+
 
         /// <summary>
         /// Sets a bool propery (from its name)

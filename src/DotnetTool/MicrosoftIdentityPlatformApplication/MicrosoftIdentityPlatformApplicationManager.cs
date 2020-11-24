@@ -82,6 +82,16 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                     };
                 }
             }
+            else if (applicationParameters.IsBlazor)
+            {
+                // The Graph SDK does not expose the .Spa platform yet.
+                application.AdditionalData = new Dictionary<string, object>();
+                application.AdditionalData.Add("spa",
+                    new Spa
+                    {
+                        redirectUris = applicationParameters.WebRedirectUris
+                    });
+            }
 
             Application createdApplication = await graphServiceClient.Applications
                 .Request()
@@ -261,12 +271,13 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
         private ApplicationParameters GetEffectiveApplicationParameters(Organization tenant, Application application)
         {
+            bool isB2C = (tenant.TenantType == "AAD B2C");
             var effectiveApplicationParameters = new ApplicationParameters
             {
                 DisplayName = application.DisplayName,
                 ClientId = application.AppId,
-                IsAAD = (tenant.TenantType != "AAD B2C"),
-                IsB2C = (tenant.TenantType == "AAD B2C"),
+                IsAAD = !isB2C,
+                IsB2C = isB2C,
                 HasAuthentication = true,
                 IsWebApi = application.Api != null
                         && (application.Api.Oauth2PermissionScopes != null && application.Api.Oauth2PermissionScopes.Any())
@@ -278,6 +289,13 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 CallsDownstreamApi = application.RequiredResourceAccess.Any(r => r.ResourceAppId != MicrosoftGraphAppId),
                 LogoutUrl = application.Web?.LogoutUrl,
             };
+
+            // Todo: might be a bit more complex in some cases for the B2C case.
+            // TODO: introduce the Instance?
+            effectiveApplicationParameters.Authority = isB2C
+                 ? $"https://{effectiveApplicationParameters.Domain}.b2clogin.com/{effectiveApplicationParameters.Domain}/MySignUpSignnPolicy"
+                 : $"https://login.microsoftonline.com/{effectiveApplicationParameters.TenantId??effectiveApplicationParameters.Domain}";
+
 
             effectiveApplicationParameters.PasswordCredentials.AddRange(application.PasswordCredentials.Select(p => p.Hint + "******************"));
             if (application.Web != null && application.Web.RedirectUris != null)

@@ -13,6 +13,11 @@
       "commandName": "Project",
       "commandLineArgs": "--tenant-id testprovisionningtool.onmicrosoft.com",
       "workingDirectory": "C:\\Users\\jmprieur\\source\\repos\\github\\jmprieur\\app-provisonning-tool\\src\\UnitTests\\bin\\Debug\\net5.0\\Tests\\webapi2\\webapi2-singleorg"
+    },
+    "blazorwasm-singleorg": {
+      "commandName": "Project",
+      "commandLineArgs": "--tenant-id testprovisionningtool.onmicrosoft.com",
+      "workingDirectory": "C:\\Users\\jmprieur\\source\\repos\\github\\jmprieur\\app-provisonning-tool\\src\\UnitTests\\bin\\Debug\\net5.0\\Tests\\blazorwasm\\blazorwasm-singleorg"
     }
   }
 }

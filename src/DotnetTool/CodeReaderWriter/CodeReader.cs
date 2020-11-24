@@ -51,7 +51,13 @@ namespace DotnetTool.CodeReaderWriter
 
         private static void PostProcessWebUris(ProjectAuthenticationSettings projectAuthenticationSettings)
         {
+            bool isBlazorWasm = projectAuthenticationSettings.ApplicationParameters.IsBlazor 
+                && !projectAuthenticationSettings.ApplicationParameters.IsWebApp;
             string callbackPath = projectAuthenticationSettings.ApplicationParameters.CallbackPath ?? "/signin-oidc";
+            if (isBlazorWasm)
+            {
+                callbackPath = "/authentication/login-callback";
+            }
             if (callbackPath != null && !callbackPath.StartsWith('/'))
             {
                 projectAuthenticationSettings.ApplicationParameters.WebRedirectUris.Add(callbackPath);
@@ -97,6 +103,10 @@ namespace DotnetTool.CodeReaderWriter
 
                 // Get the signout path (/oidc-signout)
                 string signoutPath = "/oidc-signout";
+                if (isBlazorWasm)
+                {
+                    signoutPath = "/authentication/logout-callback";
+                }
                 if (!string.IsNullOrEmpty(signoutPath))
                 {
                     if (signoutPath.StartsWith("/"))
@@ -155,12 +165,20 @@ namespace DotnetTool.CodeReaderWriter
                             }
                         }
 
-                        if (xmlDocument != null)
+                        else if (xmlDocument != null)
                         {
                             XmlNode node = FindMatchingElement(xmlDocument, path);
                             if (node!=null)
                             {
                                 UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, 0, node.InnerText);
+                            }
+                        }
+                        else
+                        {
+                            int index = fileContent.IndexOf(property);
+                            if (index != -1)
+                            {
+                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, 0, property);
                             }
                         }
                     }
@@ -244,11 +262,25 @@ namespace DotnetTool.CodeReaderWriter
                     case "Directory.TenantId":
                         projectAuthenticationSettings.ApplicationParameters.TenantId = value;
                         break;
+                    case "Application.Authority":
+                        // Case of Blazorwasm where the authority is not separated :(
+                        projectAuthenticationSettings.ApplicationParameters.Authority = value;
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            Uri authority = new Uri(value);
+                            string tenantOrDomain = authority.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+                            projectAuthenticationSettings.ApplicationParameters.Domain = tenantOrDomain;
+                            projectAuthenticationSettings.ApplicationParameters.TenantId = tenantOrDomain;
+                        }
+                        break;
                     case "Directory.Domain":
                         projectAuthenticationSettings.ApplicationParameters.Domain = value;
                         break;
                     case "secretsId":
                         projectAuthenticationSettings.ApplicationParameters.SecretsId = value;
+                        break;
+                    case "MsalAuthenticationOptions":
+                        projectAuthenticationSettings.ApplicationParameters.MsalAuthenticationOptions = value;
                         break;
                 }
             }
