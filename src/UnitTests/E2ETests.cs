@@ -26,7 +26,7 @@ namespace Tests
         [InlineData("webapp\\webapp-singleorg-callsgraph", "dotnet new webapp --auth SingleOrg --calls-graph")]
         [InlineData("webapp\\webapp-singleorg-callswebapi", "dotnet new webapp --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
         [InlineData("webapp\\webapp-b2c", "dotnet new webapp --auth IndividualB2C")]
-        [InlineData("webapp\\webapp-b2c-callswebapi", "dotnet new webapp --auth IndividualB2C --called-api-url \"https://localhost:44332/api/todolist\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/tasks/read\"")]
+        [InlineData("webapp\\webapp-b2c-callswebapi", "dotnet new webapp --auth IndividualB2C --called-api-url \"https://fabrikamb2chello.azurewebsites.net/hello\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/helloapi/demo.read\"")]
         //[InlineData("webapi2\\webapi2-noauth", "dotnet new webapi2")]
         [InlineData("webapi\\webapi-singleorg", "dotnet new webapi --auth SingleOrg")]
         [InlineData("webapi\\webapi-singleorg-callsgraph", "dotnet new webapi --auth SingleOrg --calls-graph")]
