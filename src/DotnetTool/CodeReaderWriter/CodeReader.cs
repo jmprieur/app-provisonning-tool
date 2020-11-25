@@ -282,6 +282,10 @@ namespace DotnetTool.CodeReaderWriter
                     case "MsalAuthenticationOptions":
                         projectAuthenticationSettings.ApplicationParameters.MsalAuthenticationOptions = value;
                         break;
+
+                    case "Application.CalledApiScopes":
+                        projectAuthenticationSettings.ApplicationParameters.CalledApiScopes = value;
+                        break;
                 }
             }
         }

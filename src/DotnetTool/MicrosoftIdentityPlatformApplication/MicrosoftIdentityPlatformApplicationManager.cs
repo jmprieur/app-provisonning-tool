@@ -31,11 +31,11 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 SignInAudience = AppParameterAudienceToMicrosoftIdentityPlatformAppAudience(applicationParameters.SignInAudience!),
                 Description = applicationParameters.Description
             };
+            List<RequiredResourceAccess> apiRequests = new List<RequiredResourceAccess>();
 
 
             if (applicationParameters.IsWebApi)
             {
-                // TODO: do for Web APIs
                 application.Api = new ApiApplication()
                 {
                     RequestedAccessTokenVersion = 2,
@@ -67,19 +67,17 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 // of Azure AD B2C.
                 if (applicationParameters.IsB2C)
                 {
-                    application.RequiredResourceAccess = new RequiredResourceAccess[]
-                    {
+                    apiRequests.Add(
                     new RequiredResourceAccess
                     {
-                         ResourceAppId = MicrosoftGraphAppId,
-                          ResourceAccess = new ResourceAccess[]
+                        ResourceAppId = MicrosoftGraphAppId,
+                        ResourceAccess = new ResourceAccess[]
                           {
                               // openid and offline_access
                                new ResourceAccess { Id = ScopeOpenId, Type = ScopeType},
                                new ResourceAccess { Id = ScopeOfflineAccess, Type = ScopeType},
                           }
-                    }
-                    };
+                    });
                 }
             }
             else if (applicationParameters.IsBlazor)
@@ -93,6 +91,29 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                     });
             }
 
+
+            // Case where the app calls a downstream API
+            string calledApiScopes = applicationParameters.CalledApiScopes;
+            if (!string.IsNullOrEmpty(calledApiScopes))
+            {
+                string[] scopes = calledApiScopes.Split(' ', '\t');
+                var scopesPerResource = scopes.Select(s => (!s.Contains('/'))
+                // Microsoft graph shortcut scopes (for instance "User.Read")
+                ? new ResourceAndScope ("https://graph.microsoft.com", s)
+                // Proper AppIdUri/scope
+                : new ResourceAndScope(s.Substring(0, s.LastIndexOf('/')), s.Substring(s.LastIndexOf('/')+1))
+                ).GroupBy(r => r.Resource);
+
+                foreach(var g in scopesPerResource)
+                {
+                    await AddPermission(graphServiceClient, apiRequests, g);
+                }
+            }
+
+            if (apiRequests.Any())
+            {
+                application.RequiredResourceAccess = apiRequests;
+            }
             Application createdApplication = await graphServiceClient.Applications
                 .Request()
                 .AddAsync(application);
@@ -181,6 +202,39 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
 
             return effectiveApplicationParameters;
+        }
+
+        private async Task AddPermission(
+            GraphServiceClient graphServiceClient, 
+            List<RequiredResourceAccess> apiRequests, 
+            IGrouping<string, ResourceAndScope> g)
+        {
+            
+            var spsWithScopes = await graphServiceClient.ServicePrincipals
+                .Request()
+                .Filter($"servicePrincipalNames/any(t: t eq '{g.Key}')")
+//                .Select("appId,oauth2PermissionScopes")
+                .GetAsync();
+
+            IEnumerable<string> scopes = g.Select(r => r.Scope.ToLower());
+            var spWithScopes = spsWithScopes.FirstOrDefault();
+            var permissionScopes = spWithScopes.Oauth2PermissionScopes
+                .Where(s => scopes.Contains(s.Value.ToLower()));
+
+            foreach(PermissionScope permissionScope in permissionScopes)
+            {
+                RequiredResourceAccess requiredResourceAccess = new RequiredResourceAccess
+                {
+                    ResourceAppId = spWithScopes.AppId,
+                    ResourceAccess = new List<ResourceAccess>(permissionScopes.Select(p =>
+                     new ResourceAccess
+                     {
+                          Id = p.Id,
+                          Type = ScopeType
+                     }))
+                };
+                apiRequests.Add(requiredResourceAccess);
+            }
         }
 
         private string MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(string audience)
@@ -294,7 +348,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             // TODO: introduce the Instance?
             effectiveApplicationParameters.Authority = isB2C
                  ? $"https://{effectiveApplicationParameters.Domain}.b2clogin.com/{effectiveApplicationParameters.Domain}/MySignUpSignnPolicy"
-                 : $"https://login.microsoftonline.com/{effectiveApplicationParameters.TenantId??effectiveApplicationParameters.Domain}";
+                 : $"https://login.microsoftonline.com/{effectiveApplicationParameters.TenantId ?? effectiveApplicationParameters.Domain}";
 
 
             effectiveApplicationParameters.PasswordCredentials.AddRange(application.PasswordCredentials.Select(p => p.Hint + "******************"));

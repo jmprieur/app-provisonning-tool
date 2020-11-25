@@ -103,6 +103,10 @@ namespace DotnetTool.CodeReaderWriter
                     replacement = reconcialedApplicationParameters.MsalAuthenticationOptions +
                         "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
                     break;
+
+                case "Application.CalledApiScopes":
+                    replacement = reconcialedApplicationParameters.CalledApiScopes;
+                    break;
                 default:
                     Console.WriteLine($"{replaceBy} not known");
                     break;

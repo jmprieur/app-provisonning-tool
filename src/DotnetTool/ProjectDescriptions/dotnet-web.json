@@ -61,6 +61,10 @@
           "Property": "AzureAdB2C:CallbackPath",
           "Represents": "Application.CallbackPath",
           "Default": "/signin-oidc"
+        },
+        {
+          "Property": "DownstreamApi:Scopes",
+          "Represents": "Application.CalledApiScopes"
         }
       ]
     },

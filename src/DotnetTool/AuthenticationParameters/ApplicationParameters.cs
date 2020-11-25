@@ -70,6 +70,11 @@ namespace DotnetTool.AuthenticationParameters
         public bool CallsDownstreamApi { get; set; }
 
         /// <summary>
+        /// Scopes used to call the downsteam API, if any
+        /// </summary>
+        public string CalledApiScopes { get; set; }
+
+        /// <summary>
         /// Web app redirect URIs
         /// </summary>
         public List<string> WebRedirectUris { get; } = new List<string>();
