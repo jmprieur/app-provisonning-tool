@@ -99,6 +99,9 @@ namespace DotnetTool.CodeReaderWriter
                     break;
                 case "Application.Authority":
                     replacement = reconcialedApplicationParameters.Authority;
+                    // Blazor b2C
+                    replacement = replacement.Replace("onmicrosoft.com.b2clogin.com", "b2clogin.com");
+
                     break;
                 case "MsalAuthenticationOptions":
                     // Todo generalize with a directive: Ensure line after line, or ensure line
