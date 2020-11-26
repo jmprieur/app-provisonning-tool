@@ -18,6 +18,7 @@ namespace DotnetTool.AuthenticationParameters
         public string? Domain { get; set; }
 
         public string? Authority { get; set; }
+        public string? Instance { get; set; }
 
         /// <summary>
         /// Client ID of the application

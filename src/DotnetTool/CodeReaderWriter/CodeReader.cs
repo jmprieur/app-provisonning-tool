@@ -269,6 +269,10 @@ namespace DotnetTool.CodeReaderWriter
                         {
                             Uri authority = new Uri(value);
                             string tenantOrDomain = authority.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+                            if (tenantOrDomain == "qualified.domain.name")
+                            {
+                                tenantOrDomain = null;
+                            }
                             projectAuthenticationSettings.ApplicationParameters.Domain = tenantOrDomain;
                             projectAuthenticationSettings.ApplicationParameters.TenantId = tenantOrDomain;
                         }
@@ -285,6 +289,10 @@ namespace DotnetTool.CodeReaderWriter
 
                     case "Application.CalledApiScopes":
                         projectAuthenticationSettings.ApplicationParameters.CalledApiScopes = value;
+                        break;
+
+                    case "Application.Instance":
+                        projectAuthenticationSettings.ApplicationParameters.Instance = value;
                         break;
                 }
             }

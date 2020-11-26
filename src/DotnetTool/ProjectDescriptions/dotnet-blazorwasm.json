@@ -26,7 +26,8 @@
         {
           "Property": "AzureAdB2C:ClientId",
           "Represents": "Application.ClientId",
-          "Sets": "IsB2C"
+          "Sets": "IsB2C",
+          "Default": "33333333-3333-3333-33333333333333333"
         },
         {
           "Property": "AzureAdB2C:ClientSecret",
@@ -37,7 +38,7 @@
           "Property": "AzureAdB2C:Authority",
           "Represents": "Application.Authority",
           "Sets": "IsB2C",
-          "Default": "https:////aadB2CInstance.b2clogin.com/qualified.domain.name/MySignUpSignInPolicyId"
+          "Default": "https://aadB2CInstance.b2clogin.com/qualified.domain.name/MySignUpSignInPolicyId"
         }
       ]
     },

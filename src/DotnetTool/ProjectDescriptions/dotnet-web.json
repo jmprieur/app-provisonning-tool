@@ -63,6 +63,10 @@
           "Default": "/signin-oidc"
         },
         {
+          "Property": "AzureAdB2C:Instance",
+          "Represents": "Application.Instance"
+        },
+        {
           "Property": "DownstreamApi:Scopes",
           "Represents": "Application.CalledApiScopes"
         }

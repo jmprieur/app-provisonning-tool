@@ -108,7 +108,24 @@ namespace DotnetTool.CodeReaderWriter
                     break;
 
                 case "Application.CalledApiScopes":
-                    replacement = reconcialedApplicationParameters.CalledApiScopes;
+                    replacement = reconcialedApplicationParameters.CalledApiScopes
+                        .Replace("openid", string.Empty)
+                        .Replace("offline_access", string.Empty)
+                        .Trim();
+                    break;
+
+                case "Application.Instance":
+                    if (reconcialedApplicationParameters.Instance == "https://login.microsoftonline.com/tfp/"
+                        && reconcialedApplicationParameters.IsB2C
+                        && !string.IsNullOrEmpty(reconcialedApplicationParameters.Domain)
+                        && reconcialedApplicationParameters.Domain.EndsWith(".onmicrosoft.com"))
+                    {
+                        replacement = "https://"+reconcialedApplicationParameters.Domain.Replace(".onmicrosoft.com", ".b2clogin.com");
+                    }
+                    else
+                    {
+                        replacement = reconcialedApplicationParameters.Instance;
+                    }
                     break;
                 default:
                     Console.WriteLine($"{replaceBy} not known");
