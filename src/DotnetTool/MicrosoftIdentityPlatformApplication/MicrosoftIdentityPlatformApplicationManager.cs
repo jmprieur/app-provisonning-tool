@@ -11,8 +11,6 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
     public class MicrosoftIdentityPlatformApplicationManager
     {
         const string MicrosoftGraphAppId = "00000003-0000-0000-c000-000000000000";
-        private Guid ScopeOpenId = new Guid("37f7f235-527c-4136-accd-4a02d197296e");
-        private Guid ScopeOfflineAccess = new Guid("7427e0e9-2fba-42fe-b0c0-848c9e6a8182");
         const string ScopeType = "Scope";
 
         GraphServiceClient? _graphServiceClient;
@@ -21,10 +19,12 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         {
             var graphServiceClient = GetGraphServiceClient(tokenCredential);
 
+            // Get the tenant
             var tenant = (await graphServiceClient.Organization
                 .Request()
                 .GetAsync()).FirstOrDefault();
 
+            // Create the app.
             Application application = new Application()
             {
                 DisplayName = applicationParameters.DisplayName,
@@ -43,56 +43,159 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
             if (applicationParameters.IsWebApp)
             {
-                application.Web = new WebApplication();
-
-                // IdToken
-                if (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
-                {
-                    application.Web.ImplicitGrantSettings = new ImplicitGrantSettings();
-                    application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
-                    if (applicationParameters.IsB2C)
-                    {
-                        application.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = true;
-                    }
-                }
-
-                // Redirect URIs
-                application.Web.RedirectUris = applicationParameters.WebRedirectUris;
-
-                // Logout URI
-                application.Web.LogoutUrl = applicationParameters.LogoutUrl;
-
-                // Explicit usage of MicrosoftGraph openid and offline_access, in the case
-                // of Azure AD B2C.
-                if (applicationParameters.IsB2C && applicationParameters.IsWebApp || applicationParameters.IsBlazor)
-                {
-                    if (applicationParameters.CalledApiScopes == null)
-                    {
-                        applicationParameters.CalledApiScopes = string.Empty;
-                    }
-                    if (!applicationParameters.CalledApiScopes.Contains("openid"))
-                    {
-                        applicationParameters.CalledApiScopes += " openid";
-                    }
-                    if (!applicationParameters.CalledApiScopes.Contains("offline_access"))
-                    {
-                        applicationParameters.CalledApiScopes += " offline_access";
-                    }
-                    applicationParameters.CalledApiScopes = applicationParameters.CalledApiScopes.Trim();
-                }
+                AddWebAppPlatform(applicationParameters, application);
             }
             else if (applicationParameters.IsBlazor)
             {
-                // The Graph SDK does not expose the .Spa platform yet.
-                application.AdditionalData = new Dictionary<string, object>();
-                application.AdditionalData.Add("spa",
-                    new Spa
-                    {
-                        redirectUris = applicationParameters.WebRedirectUris
-                    });
+                AddSpaPlatform(applicationParameters, application);
+            }
+
+            var scopesPerResource = await AddApiPermissions(
+                applicationParameters, 
+                graphServiceClient, 
+                application);
+            Application createdApplication = await graphServiceClient.Applications
+                .Request()
+                .AddAsync(application);
+
+            // B2C does not allow user consent, and therefore we need to explicity create
+            // a service principal and permission grants
+            if (applicationParameters.IsB2C)
+            {
+                await AddAdminConsentToApiPermissions(
+                    graphServiceClient, 
+                    scopesPerResource, 
+                    createdApplication);
+            }
+
+            // For web API, we need to know the appId of the created app to compute the Identifier URI, 
+            // and therefore we need to do it after the app is created (updating the app)
+            if (applicationParameters.IsWebApi
+                && createdApplication.Api != null
+                && (createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any()))
+            {
+                await ExposeScopes(graphServiceClient, createdApplication);
             }
 
 
+            var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
+
+            // Add password credentials
+            if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
+            {
+                await AddPasswordCredentials(
+                    graphServiceClient, 
+                    createdApplication, 
+                    effectiveApplicationParameters);
+            }
+
+            return effectiveApplicationParameters;
+        }
+
+        /// <summary>
+        /// Add a password credential to the app
+        /// </summary>
+        /// <param name="graphServiceClient"></param>
+        /// <param name="createdApplication"></param>
+        /// <param name="effectiveApplicationParameters"></param>
+        /// <returns></returns>
+        private static async Task AddPasswordCredentials(GraphServiceClient graphServiceClient, Application createdApplication, ApplicationParameters effectiveApplicationParameters)
+        {
+            var passwordCredential = new PasswordCredential
+            {
+                DisplayName = "Password created by the provisionning tool"
+            };
+
+            PasswordCredential returnedPasswordCredential = await graphServiceClient.Applications[$"{createdApplication.Id}"]
+                .AddPassword(passwordCredential)
+                .Request()
+                .PostAsync();
+            effectiveApplicationParameters.PasswordCredentials.Add(returnedPasswordCredential.SecretText);
+        }
+
+        /// <summary>
+        /// Expose scopes for the web API
+        /// </summary>
+        /// <param name="graphServiceClient"></param>
+        /// <param name="createdApplication"></param>
+        /// <returns></returns>
+        private static async Task ExposeScopes(GraphServiceClient graphServiceClient, Application createdApplication)
+        {
+            var updatedApp = new Application
+            {
+                IdentifierUris = new[] { $"api://{createdApplication.AppId}" },
+            };
+            var scopes = createdApplication.Api.Oauth2PermissionScopes?.ToList() ?? new List<PermissionScope>();
+            var newScope = new PermissionScope
+            {
+                Id = Guid.NewGuid(),
+                AdminConsentDescription = "Allows the app to access the web API on behalf of the signed-in user",
+                AdminConsentDisplayName = "Access the API on behalf of a user",
+                Type = "Admin",
+                IsEnabled = true,
+                UserConsentDescription = "Allows this app to access the web API on your behalf",
+                UserConsentDisplayName = "Access the API on your behalf",
+                Value = "access_as_user",
+            };
+            scopes.Add(newScope);
+            updatedApp.Api = new ApiApplication { Oauth2PermissionScopes = scopes };
+
+            await graphServiceClient.Applications[createdApplication.Id]
+                .Request()
+                .UpdateAsync(updatedApp);
+        }
+
+        /// <summary>
+        /// Admin consent to API permissions
+        /// </summary>
+        /// <param name="graphServiceClient"></param>
+        /// <param name="scopesPerResource"></param>
+        /// <param name="createdApplication"></param>
+        /// <returns></returns>
+        private static async Task AddAdminConsentToApiPermissions(GraphServiceClient graphServiceClient, IEnumerable<IGrouping<string, ResourceAndScope>> scopesPerResource, Application createdApplication)
+        {
+            // Creates a service principal (needed for B2C)
+            ServicePrincipal servicePrincipal = new ServicePrincipal
+            {
+                AppId = createdApplication.AppId,
+            };
+
+            var createdServicePrincipal = await graphServiceClient.ServicePrincipals
+                .Request()
+                .AddAsync(servicePrincipal);
+
+            // Consent to the scopes
+            if (scopesPerResource != null)
+            {
+                foreach (var g in scopesPerResource)
+                {
+                    IEnumerable<ResourceAndScope> resourceAndScopes = g;
+
+                    var oAuth2PermissionGrant = new OAuth2PermissionGrant
+                    {
+                        ClientId = createdServicePrincipal.Id,
+                        ConsentType = "AllPrincipals",
+                        PrincipalId = null,
+                        ResourceId = resourceAndScopes.FirstOrDefault().ResourceServicePrincipalId,
+                        Scope = string.Join(" ", resourceAndScopes.Select(r => r.Scope))
+                    };
+
+                    await graphServiceClient.Oauth2PermissionGrants
+                        .Request()
+                        .AddAsync(oAuth2PermissionGrant);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add API permissions
+        /// </summary>
+        /// <param name="applicationParameters"></param>
+        /// <param name="graphServiceClient"></param>
+        /// <param name="application"></param>
+        /// <returns></returns>
+        private async Task<IEnumerable<IGrouping<string, ResourceAndScope>>> AddApiPermissions(ApplicationParameters applicationParameters, GraphServiceClient graphServiceClient, Application application)
+        {
             // Case where the app calls a downstream API
             List<RequiredResourceAccess> apiRequests = new List<RequiredResourceAccess>();
             string calledApiScopes = applicationParameters.CalledApiScopes;
@@ -118,100 +221,80 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             {
                 application.RequiredResourceAccess = apiRequests;
             }
-            Application createdApplication = await graphServiceClient.Applications
-                .Request()
-                .AddAsync(application);
 
-            // B2C does not allow user consent, and therefore we need to explicity create
-            // a service principal and permission grants
-            if (applicationParameters.IsB2C)
+            return scopesPerResource;
+        }
+
+        /// <summary>
+        /// Adds a SPA redirect URI
+        /// </summary>
+        /// <param name="applicationParameters"></param>
+        /// <param name="application"></param>
+        private static void AddSpaPlatform(ApplicationParameters applicationParameters, Application application)
+        {
+            // The Graph SDK does not expose the .Spa platform yet.
+            application.AdditionalData = new Dictionary<string, object>();
+            application.AdditionalData.Add("spa",
+                new Spa
+                {
+                    redirectUris = applicationParameters.WebRedirectUris
+                });
+        }
+
+        /// <summary>
+        /// Adds the Web redirect URIs (and required scopes in the case of B2C web apis)
+        /// </summary>
+        /// <param name="applicationParameters"></param>
+        /// <param name="application"></param>
+        private static void AddWebAppPlatform(ApplicationParameters applicationParameters, Application application)
+        {
+            application.Web = new WebApplication();
+
+            // IdToken
+            if (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
             {
-                // Creates a service principal (needed for B2C)
-                ServicePrincipal servicePrincipal = new ServicePrincipal
+                application.Web.ImplicitGrantSettings = new ImplicitGrantSettings();
+                application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
+                if (applicationParameters.IsB2C)
                 {
-                    AppId = createdApplication.AppId,
-                };
-
-                var createdServicePrincipal = await graphServiceClient.ServicePrincipals
-                    .Request()
-                    .AddAsync(servicePrincipal);
-
-                // Consent to the scopes
-                if (scopesPerResource != null)
-                {
-                    foreach (var g in scopesPerResource)
-                    {
-                        IEnumerable<ResourceAndScope> resourceAndScopes = g;
-
-                        var oAuth2PermissionGrant = new OAuth2PermissionGrant
-                        {
-                            ClientId = createdServicePrincipal.Id,
-                            ConsentType = "AllPrincipals",
-                            PrincipalId = null,
-                            ResourceId = resourceAndScopes.FirstOrDefault().ResourceServicePrincipalId,
-                            Scope = string.Join(" ", resourceAndScopes.Select(r => r.Scope))
-                        };
-
-                        await graphServiceClient.Oauth2PermissionGrants
-                            .Request()
-                            .AddAsync(oAuth2PermissionGrant);
-                    }
+                    application.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = true;
                 }
             }
 
-            // For web API, we need to know the appId of the created app to compute the Identifier URI, 
-            // and therefore we need to do it after the app is created (updating the app)
-            if (applicationParameters.IsWebApi
-                && createdApplication.Api != null
-                && (createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any()))
+            // Redirect URIs
+            application.Web.RedirectUris = applicationParameters.WebRedirectUris;
+
+            // Logout URI
+            application.Web.LogoutUrl = applicationParameters.LogoutUrl;
+
+            // Explicit usage of MicrosoftGraph openid and offline_access, in the case
+            // of Azure AD B2C.
+            if (applicationParameters.IsB2C && applicationParameters.IsWebApp || applicationParameters.IsBlazor)
             {
-                var updatedApp = new Application
+                if (applicationParameters.CalledApiScopes == null)
                 {
-                    IdentifierUris = new[] { $"api://{createdApplication.AppId}" },
-                };
-                var scopes = createdApplication.Api.Oauth2PermissionScopes?.ToList() ?? new List<PermissionScope>();
-                var newScope = new PermissionScope
+                    applicationParameters.CalledApiScopes = string.Empty;
+                }
+                if (!applicationParameters.CalledApiScopes.Contains("openid"))
                 {
-                    Id = Guid.NewGuid(),
-                    AdminConsentDescription = "Allows the app to access the web API on behalf of the signed-in user",
-                    AdminConsentDisplayName = "Access the API on behalf of a user",
-                    Type = "Admin",
-                    IsEnabled = true,
-                    UserConsentDescription = "Allows this app to access the web API on your behalf",
-                    UserConsentDisplayName = "Access the API on your behalf",
-                    Value = "access_as_user",
-                };
-                scopes.Add(newScope);
-                updatedApp.Api = new ApiApplication { Oauth2PermissionScopes = scopes };
-
-                await graphServiceClient.Applications[createdApplication.Id]
-                    .Request()
-                    .UpdateAsync(updatedApp);
+                    applicationParameters.CalledApiScopes += " openid";
+                }
+                if (!applicationParameters.CalledApiScopes.Contains("offline_access"))
+                {
+                    applicationParameters.CalledApiScopes += " offline_access";
+                }
+                applicationParameters.CalledApiScopes = applicationParameters.CalledApiScopes.Trim();
             }
-
-
-            var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
-
-            // Todo: can we move at creation?
-            // Add a password credential. 
-            if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
-            {
-                var passwordCredential = new PasswordCredential
-                {
-                    DisplayName = "Password created by the provisionning tool"
-                };
-
-                PasswordCredential returnedPasswordCredential = await graphServiceClient.Applications[$"{createdApplication.Id}"]
-                    .AddPassword(passwordCredential)
-                    .Request()
-                    .PostAsync();
-                effectiveApplicationParameters.PasswordCredentials.Add(returnedPasswordCredential.SecretText);
-            }
-
-
-            return effectiveApplicationParameters;
         }
 
+
+        /// <summary>
+        /// Adds API permissions
+        /// </summary>
+        /// <param name="graphServiceClient"></param>
+        /// <param name="apiRequests"></param>
+        /// <param name="g"></param>
+        /// <returns></returns>
         private async Task AddPermission(
             GraphServiceClient graphServiceClient,
             List<RequiredResourceAccess> apiRequests,
@@ -257,6 +340,11 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
         }
 
+        /// <summary>
+        /// Computes the audience
+        /// </summary>
+        /// <param name="audience"></param>
+        /// <returns></returns>
         private string MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(string audience)
         {
             switch (audience)
