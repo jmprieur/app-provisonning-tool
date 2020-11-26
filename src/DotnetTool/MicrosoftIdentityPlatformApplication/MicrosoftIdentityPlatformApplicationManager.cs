@@ -31,7 +31,6 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 SignInAudience = AppParameterAudienceToMicrosoftIdentityPlatformAppAudience(applicationParameters.SignInAudience!),
                 Description = applicationParameters.Description
             };
-            List<RequiredResourceAccess> apiRequests = new List<RequiredResourceAccess>();
 
 
             if (applicationParameters.IsWebApi)
@@ -65,19 +64,21 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
                 // Explicit usage of MicrosoftGraph openid and offline_access, in the case
                 // of Azure AD B2C.
-                if (applicationParameters.IsB2C)
+                if (applicationParameters.IsB2C && applicationParameters.IsWebApp || applicationParameters.IsBlazor)
                 {
-                    apiRequests.Add(
-                    new RequiredResourceAccess
+                    if (applicationParameters.CalledApiScopes == null)
                     {
-                        ResourceAppId = MicrosoftGraphAppId,
-                        ResourceAccess = new ResourceAccess[]
-                          {
-                              // openid and offline_access
-                               new ResourceAccess { Id = ScopeOpenId, Type = ScopeType},
-                               new ResourceAccess { Id = ScopeOfflineAccess, Type = ScopeType},
-                          }
-                    });
+                        applicationParameters.CalledApiScopes = string.Empty;
+                    }
+                    if (!applicationParameters.CalledApiScopes.Contains("openid"))
+                    {
+                        applicationParameters.CalledApiScopes += " openid";
+                    }
+                    if (!applicationParameters.CalledApiScopes.Contains("offline_access"))
+                    {
+                        applicationParameters.CalledApiScopes += " offline_access";
+                    }
+                    applicationParameters.CalledApiScopes = applicationParameters.CalledApiScopes.Trim();
                 }
             }
             else if (applicationParameters.IsBlazor)
@@ -93,18 +94,21 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
 
             // Case where the app calls a downstream API
+            List<RequiredResourceAccess> apiRequests = new List<RequiredResourceAccess>();
             string calledApiScopes = applicationParameters.CalledApiScopes;
+            IEnumerable<IGrouping<string, ResourceAndScope>>? scopesPerResource = null;
             if (!string.IsNullOrEmpty(calledApiScopes))
             {
-                string[] scopes = calledApiScopes.Split(' ', '\t');
-                var scopesPerResource = scopes.Select(s => (!s.Contains('/'))
+                string[] scopes = calledApiScopes.Split(' ', '\t', StringSplitOptions.RemoveEmptyEntries);
+                scopesPerResource = scopes.Select(s => (!s.Contains('/'))
                 // Microsoft graph shortcut scopes (for instance "User.Read")
-                ? new ResourceAndScope ("https://graph.microsoft.com", s)
+                ? new ResourceAndScope("https://graph.microsoft.com", s)
                 // Proper AppIdUri/scope
-                : new ResourceAndScope(s.Substring(0, s.LastIndexOf('/')), s.Substring(s.LastIndexOf('/')+1))
-                ).GroupBy(r => r.Resource);
+                : new ResourceAndScope(s.Substring(0, s.LastIndexOf('/')), s.Substring(s.LastIndexOf('/') + 1))
+                ).GroupBy(r => r.Resource)
+                .ToArray(); // We want to modify these elements to cache the service principal ID
 
-                foreach(var g in scopesPerResource)
+                foreach (var g in scopesPerResource)
                 {
                     await AddPermission(graphServiceClient, apiRequests, g);
                 }
@@ -122,12 +126,6 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             // a service principal and permission grants
             if (applicationParameters.IsB2C)
             {
-                // Get the Microsoft Graph service principal
-                var graphServicePrincipal = await graphServiceClient.ServicePrincipals
-                    .Request()
-                    .Filter($"AppId eq '{MicrosoftGraphAppId}'")
-                    .GetAsync();
-
                 // Creates a service principal (needed for B2C)
                 ServicePrincipal servicePrincipal = new ServicePrincipal
                 {
@@ -138,24 +136,34 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                     .Request()
                     .AddAsync(servicePrincipal);
 
-                if (applicationParameters.IsWebApp)
+                // Consent to the scopes
+                if (scopesPerResource != null)
                 {
-                    var oAuth2PermissionGrant = new OAuth2PermissionGrant
+                    foreach (var g in scopesPerResource)
                     {
-                        ClientId = createdServicePrincipal.Id,
-                        ConsentType = "AllPrincipals",
-                        PrincipalId = null,
-                        ResourceId = graphServicePrincipal.FirstOrDefault().Id,
-                        Scope = "openid offline_access"
-                    };
+                        IEnumerable<ResourceAndScope> resourceAndScopes = g;
 
-                    await graphServiceClient.Oauth2PermissionGrants
-                        .Request()
-                        .AddAsync(oAuth2PermissionGrant);
+                        var oAuth2PermissionGrant = new OAuth2PermissionGrant
+                        {
+                            ClientId = createdServicePrincipal.Id,
+                            ConsentType = "AllPrincipals",
+                            PrincipalId = null,
+                            ResourceId = resourceAndScopes.FirstOrDefault().ResourceServicePrincipalId,
+                            Scope = string.Join(" ", resourceAndScopes.Select(r => r.Scope))
+                        };
+
+                        await graphServiceClient.Oauth2PermissionGrants
+                            .Request()
+                            .AddAsync(oAuth2PermissionGrant);
+                    }
                 }
             }
 
-            if (createdApplication.Api != null && createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any())
+            // For web API, we need to know the appId of the created app to compute the Identifier URI, 
+            // and therefore we need to do it after the app is created (updating the app)
+            if (applicationParameters.IsWebApi
+                && createdApplication.Api != null
+                && (createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any()))
             {
                 var updatedApp = new Application
                 {
@@ -205,36 +213,48 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         }
 
         private async Task AddPermission(
-            GraphServiceClient graphServiceClient, 
-            List<RequiredResourceAccess> apiRequests, 
+            GraphServiceClient graphServiceClient,
+            List<RequiredResourceAccess> apiRequests,
             IGrouping<string, ResourceAndScope> g)
         {
-            
+
             var spsWithScopes = await graphServiceClient.ServicePrincipals
                 .Request()
                 .Filter($"servicePrincipalNames/any(t: t eq '{g.Key}')")
-//                .Select("appId,oauth2PermissionScopes")
                 .GetAsync();
 
-            IEnumerable<string> scopes = g.Select(r => r.Scope.ToLower());
+            // Special case for B2C where the service principal does not contain the graph URL :(
+            if (!spsWithScopes.Any() && g.Key == "https://graph.microsoft.com")
+            {
+                spsWithScopes = await graphServiceClient.ServicePrincipals
+                                .Request()
+                                .Filter($"AppId eq '{MicrosoftGraphAppId}'")
+                                .GetAsync();
+            }
             var spWithScopes = spsWithScopes.FirstOrDefault();
+
+            // Keep the service principal ID for later
+            foreach (ResourceAndScope r in g)
+            {
+                r.ResourceServicePrincipalId = spWithScopes?.Id;
+            }
+
+            IEnumerable<string> scopes = g.Select(r => r.Scope.ToLower());
             var permissionScopes = spWithScopes.Oauth2PermissionScopes
                 .Where(s => scopes.Contains(s.Value.ToLower()));
 
-            foreach(PermissionScope permissionScope in permissionScopes)
+            RequiredResourceAccess requiredResourceAccess = new RequiredResourceAccess
             {
-                RequiredResourceAccess requiredResourceAccess = new RequiredResourceAccess
-                {
-                    ResourceAppId = spWithScopes.AppId,
-                    ResourceAccess = new List<ResourceAccess>(permissionScopes.Select(p =>
-                     new ResourceAccess
-                     {
-                          Id = p.Id,
-                          Type = ScopeType
-                     }))
-                };
-                apiRequests.Add(requiredResourceAccess);
-            }
+                ResourceAppId = spWithScopes.AppId,
+                ResourceAccess = new List<ResourceAccess>(permissionScopes.Select(p =>
+                 new ResourceAccess
+                 {
+                     Id = p.Id,
+                     Type = ScopeType
+                 }))
+            };
+            apiRequests.Add(requiredResourceAccess);
+
         }
 
         private string MicrosoftIdentityPlatformAppAudienceToAppParameterAudience(string audience)

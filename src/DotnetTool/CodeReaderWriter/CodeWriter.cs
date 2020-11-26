@@ -63,7 +63,8 @@ namespace DotnetTool.CodeReaderWriter
                         if (!File.Exists(path))
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(path));
-                            File.WriteAllText(path, $"{{\n    \"AzureAd:ClientSecret\": \"{password}\"\n}}");
+                            string section = reconcialedApplicationParameters.IsB2C ? "AzureADB2C" : "AzureAD";
+                            File.WriteAllText(path, $"{{\n    \"{section}:ClientSecret\": \"{password}\"\n}}");
                             replacement = "See user secrets";
                         }
                         else
@@ -100,6 +101,8 @@ namespace DotnetTool.CodeReaderWriter
                     replacement = reconcialedApplicationParameters.Authority;
                     break;
                 case "MsalAuthenticationOptions":
+                    // Todo generalize with a directive: Ensure line after line, or ensure line
+                    // between line and line
                     replacement = reconcialedApplicationParameters.MsalAuthenticationOptions +
                         "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
                     break;

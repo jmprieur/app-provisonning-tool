@@ -9,5 +9,6 @@
         }
         public string Resource { get; set; }
         public string Scope { get; set; }
+        public string ResourceServicePrincipalId { get; set; }
     }
 }
