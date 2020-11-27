@@ -36,18 +36,18 @@ Will:
 
 Currently works for:
 
-- [ x ] AAD apps
-- [ x ] B2C apps (except Blazorwasm hosted apps for the moment)
+- [x] AAD apps
+- [x] B2C apps (except Blazorwasm hosted apps for the moment)
 
 In
-- [ x ] web apps
-- [ x ] web apis
-- [ x ] blazor web assembly
+- [x] web apps
+- [x] web apis
+- [x] blazor web assembly
 - [ ] blazor web assembly hosted
 
 Where these apps:
-- [ x ] call Graph or not
-- [ x ] call a downstream API or not
+- [x] call Graph or not
+- [x] call a downstream API or not
 
 
 ##### Parameters
