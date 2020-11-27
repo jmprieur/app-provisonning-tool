@@ -1,12 +1,13 @@
 # app-provisonning-tool
-Tool to provision Microsoft identity platform applications and sync it with code configuration
+Tool to create Microsoft identity platform applications in a tenant (AAD or B2C) and update the configuration code of the applications
 
 ## Scenarios
 
 ### ASP.NET Core web apps / apis where Authentication was enabled
 
-#### Configure a green field application (new app registration)
+#### Configure the code with a new app registration)
 
+##### Usage
 Go to a folder containing an ASP.NET Core 3.1 or 5 application where authentication was enabled, but not configured
 
 ```Shell
@@ -17,7 +18,14 @@ example
 
 ```Shell
 cd folder-of-my-app
-app-provisionning-tool --client-id 18b26764-9897-4c83-9bee-a5da835d5f29 --tenant-id 7f58f645-c190-4ce5-9de4-e2b7acd2a6ab
+dotnet new webapp --auth SingleOrg
+app-provisionning-tool --tenant-id testprovisionningtool.onmicrosoft.com
+```
+
+```Shell
+cd folder-of-my-b2c-app
+dotnet new webapp --auth IndividualB2C
+app-provisionning-tool --tenant-id fabrikamb2c.onmicrosoft.com
 ```
 
 Will: 
@@ -26,19 +34,32 @@ Will:
 - create a new app registration in the tenant, using your developer credentials if possible (and prompting you otherwise)
 - update the configuration files (and program.cs for Blazor apps)
 
-Works for:
+Currently works for:
 
-- [ ] AAD
-- [ ] B2C
+- [ x ] AAD apps
+- [ x ] B2C apps (except Blazorwasm hosted apps for the moment)
 
 In
-- [ ] web apps
-- [ ] web apis
-- [ ] blazor web assembly
+- [ x ] web apps
+- [ x ] web apis
+- [ x ] blazor web assembly
 - [ ] blazor web assembly hosted
 
-#### Configure a green field application (existing app registration)
+Where these apps:
+- [ x ] call Graph or not
+- [ x ] call a downstream API or not
 
+
+##### Parameters
+Parameter | Description
+`--tenant-id <tenantid>` | If specified, the tool will create the application in the specified tenant. Otherwise it will create the app in your home tenant ID
+`--username <someone@domain.com>` | Needed when you are signed-in in Visual Studio, or Azure CLI with several identities. In that case username is used to disambiguate which identity to use.
+`--tenant-id '<pathToFolder>'` | When specified, will analyze the application code in the specified folder. Otherwise analyzes the code in the current directory
+
+
+#### Configure the code with an existing app registration)
+
+This is the same, but this time you'll specify the clientId of an existing application registration.
 Go to a folder containing an ASP.NET Core 3.1 or 5 application where authentication was enabled, but not configured
 
 ```Shell
