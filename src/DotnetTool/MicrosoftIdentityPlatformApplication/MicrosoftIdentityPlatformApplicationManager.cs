@@ -51,21 +51,33 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             }
 
             var scopesPerResource = await AddApiPermissions(
-                applicationParameters, 
-                graphServiceClient, 
+                applicationParameters,
+                graphServiceClient,
                 application);
             Application createdApplication = await graphServiceClient.Applications
                 .Request()
                 .AddAsync(application);
 
+            // Creates a service principal (needed for B2C)
+            ServicePrincipal servicePrincipal = new ServicePrincipal
+            {
+                AppId = createdApplication.AppId,
+            };
+
             // B2C does not allow user consent, and therefore we need to explicity create
-            // a service principal and permission grants
+            // a service principal and permission grants. It's also useful for Blazorwasm hosted
+            // applications. We choose to create it always
+            var createdServicePrincipal = await graphServiceClient.ServicePrincipals
+                .Request()
+                .AddAsync(servicePrincipal);
+
+            // B2C does not allow user consent, and therefore we need to explicity grant permissions
             if (applicationParameters.IsB2C)
             {
                 await AddAdminConsentToApiPermissions(
-                    graphServiceClient, 
-                    scopesPerResource, 
-                    createdApplication);
+                    graphServiceClient,
+                    createdServicePrincipal,
+                    scopesPerResource);
             }
 
             // For web API, we need to know the appId of the created app to compute the Identifier URI, 
@@ -75,21 +87,60 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 && (createdApplication.IdentifierUris == null || !createdApplication.IdentifierUris.Any()))
             {
                 await ExposeScopes(graphServiceClient, createdApplication);
+
+                // Blazorwasm hosted: add permission to serer web api from client SPA
+                if (applicationParameters.IsBlazor)
+                {
+                    await AddApiPermissionFromBlazorwasmHostedSpaToServerApi(graphServiceClient,
+                        createdApplication,
+                        createdServicePrincipal);
+                }
             }
 
+            // Re-reading the app to be sure to have everything.
+            createdApplication = (await graphServiceClient.Applications
+                .Request()
+                .Filter($"appId eq '{createdApplication.AppId}'")
+                .GetAsync()).First();
 
             var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
-
+            
             // Add password credentials
             if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
             {
                 await AddPasswordCredentials(
-                    graphServiceClient, 
-                    createdApplication, 
+                    graphServiceClient,
+                    createdApplication,
                     effectiveApplicationParameters);
             }
 
             return effectiveApplicationParameters;
+        }
+
+        private async Task AddApiPermissionFromBlazorwasmHostedSpaToServerApi(GraphServiceClient graphServiceClient, Application createdApplication, ServicePrincipal createdServicePrincipal)
+        {
+            var requiredResourceAccess = new List<RequiredResourceAccess>();
+            var resourcesAccessAndScopes = new List<ResourceAndScope>
+                {
+                    new ResourceAndScope($"api://{createdApplication.AppId}", "access_as_user")
+                    {
+                         ResourceServicePrincipalId = createdServicePrincipal.Id
+                    }
+                };
+
+            await AddPermission(
+                graphServiceClient,
+                requiredResourceAccess,
+                resourcesAccessAndScopes.GroupBy(r => r.Resource).First());
+
+            Application applicationToUpdate = new Application
+            {
+                RequiredResourceAccess = requiredResourceAccess
+            };
+
+            await graphServiceClient.Applications[createdApplication.Id]
+                .Request()
+                .UpdateAsync(applicationToUpdate);
         }
 
         /// <summary>
@@ -131,7 +182,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 Id = Guid.NewGuid(),
                 AdminConsentDescription = "Allows the app to access the web API on behalf of the signed-in user",
                 AdminConsentDisplayName = "Access the API on behalf of a user",
-                Type = "Admin",
+                Type = "User",
                 IsEnabled = true,
                 UserConsentDescription = "Allows this app to access the web API on your behalf",
                 UserConsentDisplayName = "Access the API on your behalf",
@@ -150,20 +201,12 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         /// </summary>
         /// <param name="graphServiceClient"></param>
         /// <param name="scopesPerResource"></param>
-        /// <param name="createdApplication"></param>
         /// <returns></returns>
-        private static async Task AddAdminConsentToApiPermissions(GraphServiceClient graphServiceClient, IEnumerable<IGrouping<string, ResourceAndScope>> scopesPerResource, Application createdApplication)
+        private static async Task AddAdminConsentToApiPermissions(
+            GraphServiceClient graphServiceClient, 
+            ServicePrincipal servicePrincipal,
+            IEnumerable<IGrouping<string, ResourceAndScope>> scopesPerResource)
         {
-            // Creates a service principal (needed for B2C)
-            ServicePrincipal servicePrincipal = new ServicePrincipal
-            {
-                AppId = createdApplication.AppId,
-            };
-
-            var createdServicePrincipal = await graphServiceClient.ServicePrincipals
-                .Request()
-                .AddAsync(servicePrincipal);
-
             // Consent to the scopes
             if (scopesPerResource != null)
             {
@@ -173,7 +216,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
 
                     var oAuth2PermissionGrant = new OAuth2PermissionGrant
                     {
-                        ClientId = createdServicePrincipal.Id,
+                        ClientId = servicePrincipal.Id,
                         ConsentType = "AllPrincipals",
                         PrincipalId = null,
                         ResourceId = resourceAndScopes.FirstOrDefault().ResourceServicePrincipalId,

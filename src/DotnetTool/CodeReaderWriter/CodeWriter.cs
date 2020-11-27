@@ -106,10 +106,14 @@ namespace DotnetTool.CodeReaderWriter
                 case "MsalAuthenticationOptions":
                     // Todo generalize with a directive: Ensure line after line, or ensure line
                     // between line and line
-                    replacement = reconcialedApplicationParameters.MsalAuthenticationOptions +
-                        "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
-                    break;
+                    replacement = reconcialedApplicationParameters.MsalAuthenticationOptions;
+                    if (!reconcialedApplicationParameters.IsWebApi)
+                    {
+                        replacement +=
+                            "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
 
+                    }                    
+                    break;
                 case "Application.CalledApiScopes":
                     replacement = reconcialedApplicationParameters.CalledApiScopes
                         .Replace("openid", string.Empty)
