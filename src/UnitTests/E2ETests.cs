@@ -50,16 +50,17 @@ namespace Tests
         [InlineData("blazorwasm\\blazorwasm-singleorg-callsgraph", "dotnet new blazorwasm --auth SingleOrg --calls-graph")]
         [InlineData("blazorwasm\\blazorwasm-singleorg-callswebapi", "dotnet new blazorwasm --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
         [InlineData("blazorwasm\\blazorwasm-singleorg-hosted", "dotnet new blazorwasm --auth SingleOrg  --hosted")]
-        //[InlineData("blazorwasm\\blazorwasm-singleorg-callsgraph-hosted", "dotnet new blazorwasm2 --auth SingleOrg --calls-graph --hosted")]
-        //[InlineData("blazorwasm\\blazorwasm-singleorg-callswebapi-hosted", "dotnet new blazorwasm2 --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\" --hosted")]
+        [InlineData("blazorwasm\\blazorwasm-singleorg-callsgraph-hosted", "dotnet new blazorwasm --auth SingleOrg --calls-graph --hosted")]
+        [InlineData("blazorwasm\\blazorwasm-singleorg-callswebapi-hosted", "dotnet new blazorwasm --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\" --hosted")]
         [InlineData("blazorwasm\\blazorwasm-b2c", "dotnet new blazorwasm --auth IndividualB2C")]
-        //[InlineData("blazorwasm2\\blazorwasm2-b2c-hosted", "dotnet new blazorwasm2 --auth IndividualB2C  --hosted")]
-        //[InlineData("blazorwasm2\\blazorwasm2-b2c-callswebapi-hosted", "dotnet new blazorwasm2 --auth IndividualB2C --called-api-url \"https://fabrikamb2chello.azurewebsites.net/hello\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/helloapi/demo.read\" --hosted")]
+        // [InlineData("blazorwasm2\\blazorwasm2-b2c-hosted", "dotnet new blazorwasm --auth IndividualB2C  --hosted")]
+        // [InlineData("blazorwasm2\\blazorwasm2-b2c-callswebapi-hosted", "dotnet new blazorwasm --auth IndividualB2C --called-api-url \"https://fabrikamb2chello.azurewebsites.net/hello\" --called-api-scopes \"https://fabrikamb2c.onmicrosoft.com/helloapi/demo.read\" --hosted")]
         [Theory]
         public async Task TestEndToEnd(string folder, string command)
         {
             // Create the folder
             string executionFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            executionFolder = "C:\\temp\\test-provisionning";
             string folderToCreate = Path.Combine(executionFolder, "Tests", folder);
 
             // dotnet new command to create the project
