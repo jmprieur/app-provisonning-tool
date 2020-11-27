@@ -55,7 +55,7 @@ Parameter | Description
 --------- | ------------
 `--tenant-id <tenantid>` | If specified, the tool will create the application in the specified tenant. Otherwise it will create the app in your home tenant ID
 `--username <someone@domain.com>` | Needed when you are signed-in in Visual Studio, or Azure CLI with several identities. In that case username is used to disambiguate which identity to use.
-`--tenant-id '<pathToFolder>'` | When specified, will analyze the application code in the specified folder. Otherwise analyzes the code in the current directory
+`--folder '<pathToFolder>'` | When specified, will analyze the application code in the specified folder. Otherwise analyzes the code in the current directory
 
 
 #### Configure the code with an existing app registration)
