@@ -1,6 +1,20 @@
 # app-provisonning-tool
 Tool to create Microsoft identity platform applications in a tenant (AAD or B2C) and update the configuration code of the applications
 
+## Installing/Uninstalling the tool
+
+1. Build the repository
+2. Run the following in a developer command prompt in the root of the `src\DotnetTool` folder:
+   
+   ```Shell
+   dotnet tool install --global --add-source ./nupkg msIdentityApp
+   ```
+
+If later you want to uninstall the tool, just run:
+```Shell
+dotnet tool uninstall --global msidentityapp
+```
+
 ## Scenarios
 
 ### ASP.NET Core web apps / apis where Authentication was enabled
@@ -11,7 +25,7 @@ Tool to create Microsoft identity platform applications in a tenant (AAD or B2C)
 Go to a folder containing an ASP.NET Core 3.1 or 5 application where authentication was enabled, but not configured
 
 ```Shell
-app-provisionning-tool [--tenant-id yourTenantId] [--username username@domain.com]
+ms-identity-app [--tenant-id yourTenantId] [--username username@domain.com]
 ```
 
 example
@@ -19,17 +33,17 @@ example
 ```Shell
 cd folder-of-my-app
 dotnet new webapp --auth SingleOrg
-app-provisionning-tool --tenant-id testprovisionningtool.onmicrosoft.com
+ms-identity-app --tenant-id testprovisionningtool.onmicrosoft.com
 ```
 
 ```Shell
 cd folder-of-my-b2c-app
 dotnet new webapp --auth IndividualB2C
-app-provisionning-tool --tenant-id fabrikamb2c.onmicrosoft.com
+ms-identity-app --tenant-id fabrikamb2c.onmicrosoft.com
 ```
 
 Will: 
-- detect the kind of application (web app, web api, blazor app)
+- detect the kind of application (web app, web api, blazor server, blazor web assembly, hosted or not)
 - detect the IDP (AAD or B2C*)
 - create a new app registration in the tenant, using your developer credentials if possible (and prompting you otherwise)
 - update the configuration files (and program.cs for Blazor apps)
@@ -43,7 +57,7 @@ In
 - [x] web apps
 - [x] web apis
 - [x] blazor web assembly
-- [ ] blazor web assembly hosted
+- [x] blazor web assembly hosted **except B2C**
 
 Where these apps:
 - [x] call Graph or not
@@ -75,3 +89,12 @@ app-provisionning-tool --client-id 18b26764-9897-4c83-9bee-a5da835d5f29 --tenant
 ```
 
 uses your developer credentials to find application "18b26764-9897-4c83-9bee-a5da835d5f29" in tenant "7f58f645-c190-4ce5-9de4-e2b7acd2a6ab" and update the settings files from the app registration (apart from the client secret which cannot be retrieved from Azure AD)
+
+
+#### Update the app registration based on the code
+
+Future scenario being developped
+
+#### Update the code to add authentication
+
+Future scenario
