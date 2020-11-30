@@ -17,8 +17,19 @@ dotnet tool uninstall --global msidentityapp
 
 ## Scenarios
 
-### ASP.NET Core web apps / apis where Authentication was enabled
+<table>
+   <tr> <td>Family of scenarios (initial state of the code)</td> <td>Scenario</td> </tr>
+   <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled </td> 
+      <td>Configure the code with a new app registration</td>
+   </tr>
+   <tr> <td>Configure the code with an existing app registration</td></tr>
+   <tr> <td>Update the app registration based on the code (or troubleshoot)</td></tr>
+   <tr> <td>ASP.NET Core web apps / apis where Authentication was not enabled </td><td> Update the code to add authentication</td>
+   </tr>
+ </table>
 
+### ASP.NET Core web apps / apis where Authentication was enabled
+ 
 #### Configure the code with a new app registration
 
 ##### Usage
@@ -72,7 +83,7 @@ Parameter | Description
 `--folder '<pathToFolder>'` | When specified, will analyze the application code in the specified folder. Otherwise analyzes the code in the current directory
 
 
-#### Configure the code with an existing app registration)
+#### Configure the code with an existing app registration
 
 This is the same, but this time you'll specify the clientId of an existing application registration.
 Go to a folder containing an ASP.NET Core 3.1 or 5 application where authentication was enabled, but not configured
