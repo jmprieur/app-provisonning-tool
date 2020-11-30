@@ -15,6 +15,14 @@ If later you want to uninstall the tool, just run:
 dotnet tool uninstall --global msidentityapp
 ```
 
+## Pre-requisites to using the tool
+
+Have an AAD or B2C tenant (or both). 
+- If you want to add an AAD registration, you are usually already signed-in in Visual Studio in a tenant. If needed you can create your own tenant by followin the following quickstart [Setup a tenant](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant). But be sure to sign-out and sign-in from Visual Studio or Azure CLI so that this tenant is known in the shared token cache
+
+If you want to add a AAD B2C registration you'll need a B2C tenant, and explicity pass it to the --tenant-id option of the tool. To create a B2C tenant, see [Create a B2C tenant](https://docs.microsoft.com/azure/active-directory-b2c/tutorial-create-tenant)
+
+
 ## Scenarios
 
 <table>
