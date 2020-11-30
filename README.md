@@ -19,7 +19,7 @@ dotnet tool uninstall --global msidentityapp
 
 ### ASP.NET Core web apps / apis where Authentication was enabled
 
-#### Configure the code with a new app registration)
+#### Configure the code with a new app registration
 
 ##### Usage
 Go to a folder containing an ASP.NET Core 3.1 or 5 application where authentication was enabled, but not configured
@@ -94,6 +94,8 @@ uses your developer credentials to find application "18b26764-9897-4c83-9bee-a5d
 #### Update the app registration based on the code
 
 Future scenario being developped
+
+###  ASP.NET Core web apps / apis where Authentication was not enabled
 
 #### Update the code to add authentication
 
