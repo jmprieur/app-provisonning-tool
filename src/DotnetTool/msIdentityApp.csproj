@@ -11,6 +11,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="nupkg\**" />
+    <Compile Remove="TestResults\**" />
+    <EmbeddedResource Remove="nupkg\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <None Remove="nupkg\**" />
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="ProjectDescriptions\dotnet-blazorwasm-hosted.json" />
     <None Remove="ProjectDescriptions\dotnet-blazorwasm.json" />
   </ItemGroup>
