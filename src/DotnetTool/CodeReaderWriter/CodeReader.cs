@@ -294,6 +294,10 @@ namespace DotnetTool.CodeReaderWriter
                     case "Application.Instance":
                         projectAuthenticationSettings.ApplicationParameters.Instance = value;
                         break;
+
+                    case "Application.SusiPolicy":
+                        projectAuthenticationSettings.ApplicationParameters.SusiPolicy = value;
+                        break;
                 }
             }
         }

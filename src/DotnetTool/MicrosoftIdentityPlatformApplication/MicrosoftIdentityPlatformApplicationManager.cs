@@ -93,7 +93,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 {
                     await AddApiPermissionFromBlazorwasmHostedSpaToServerApi(graphServiceClient,
                         createdApplication,
-                        createdServicePrincipal);
+                        createdServicePrincipal,
+                        applicationParameters.IsB2C);
                 }
             }
 
@@ -103,7 +104,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 .Filter($"appId eq '{createdApplication.AppId}'")
                 .GetAsync()).First();
 
-            var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication);
+            var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication, applicationParameters);
             
             // Add password credentials
             if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
@@ -117,7 +118,11 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             return effectiveApplicationParameters;
         }
 
-        private async Task AddApiPermissionFromBlazorwasmHostedSpaToServerApi(GraphServiceClient graphServiceClient, Application createdApplication, ServicePrincipal createdServicePrincipal)
+        private async Task AddApiPermissionFromBlazorwasmHostedSpaToServerApi(
+            GraphServiceClient graphServiceClient, 
+            Application createdApplication, 
+            ServicePrincipal createdServicePrincipal,
+            bool isB2C)
         {
             var requiredResourceAccess = new List<RequiredResourceAccess>();
             var resourcesAccessAndScopes = new List<ResourceAndScope>
@@ -141,6 +146,22 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             await graphServiceClient.Applications[createdApplication.Id]
                 .Request()
                 .UpdateAsync(applicationToUpdate);
+
+            if (isB2C)
+            {
+                var oAuth2PermissionGrant = new OAuth2PermissionGrant
+                {
+                    ClientId = createdServicePrincipal.Id,
+                    ConsentType = "AllPrincipals",
+                    PrincipalId = null,
+                    ResourceId = createdServicePrincipal.Id,
+                    Scope = "access_as_user"
+                };
+
+                await graphServiceClient.Oauth2PermissionGrants
+                    .Request()
+                    .AddAsync(oAuth2PermissionGrant);
+            }
         }
 
         /// <summary>
@@ -468,13 +489,16 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 return null;
             }
 
-            ApplicationParameters effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, readApplication);
+            ApplicationParameters effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, readApplication, applicationParameters);
 
             return effectiveApplicationParameters;
 
         }
 
-        private ApplicationParameters GetEffectiveApplicationParameters(Organization tenant, Application application)
+        private ApplicationParameters GetEffectiveApplicationParameters(
+            Organization tenant, 
+            Application application, 
+            ApplicationParameters originalApplicationParameters)
         {
             bool isB2C = (tenant.TenantType == "AAD B2C");
             var effectiveApplicationParameters = new ApplicationParameters
@@ -493,14 +517,22 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 CallsMicrosoftGraph = application.RequiredResourceAccess.Any(r => r.ResourceAppId == MicrosoftGraphAppId),
                 CallsDownstreamApi = application.RequiredResourceAccess.Any(r => r.ResourceAppId != MicrosoftGraphAppId),
                 LogoutUrl = application.Web?.LogoutUrl,
-            };
+
+                // Parameters that cannot be infered from the app
+                SusiPolicy = originalApplicationParameters.SusiPolicy,
+                SecretsId = originalApplicationParameters.SecretsId,
+                MsalAuthenticationOptions = originalApplicationParameters.MsalAuthenticationOptions,
+                CalledApiScopes = originalApplicationParameters.CalledApiScopes,
+        };
 
             // Todo: might be a bit more complex in some cases for the B2C case.
             // TODO: introduce the Instance?
             effectiveApplicationParameters.Authority = isB2C
-                 ? $"https://{effectiveApplicationParameters.Domain}.b2clogin.com/{effectiveApplicationParameters.Domain}/MySignUpSignnPolicy"
-                 : $"https://login.microsoftonline.com/{effectiveApplicationParameters.TenantId ?? effectiveApplicationParameters.Domain}";
-
+                 ? $"https://{effectiveApplicationParameters.Domain1}.b2clogin.com/{effectiveApplicationParameters.Domain}/{effectiveApplicationParameters.SusiPolicy}/"
+                 : $"https://login.microsoftonline.com/{effectiveApplicationParameters.TenantId ?? effectiveApplicationParameters.Domain}/";
+            effectiveApplicationParameters.Instance = isB2C
+                ? $"https://{effectiveApplicationParameters.Domain1}.b2clogin.com/"
+                : originalApplicationParameters.Instance;
 
             effectiveApplicationParameters.PasswordCredentials.AddRange(application.PasswordCredentials.Select(p => p.Hint + "******************"));
             if (application.Web != null && application.Web.RedirectUris != null)

@@ -17,6 +17,17 @@ namespace DotnetTool.AuthenticationParameters
 
         public string? Domain { get; set; }
 
+        /// <summary>
+        /// First part of the Domain.
+        /// </summary>
+        public string? Domain1
+        {
+            get
+            {
+                return Domain?.Replace(".onmicrosoft.com", string.Empty);
+            }
+        }
+
         public string? Authority { get; set; }
         public string? Instance { get; set; }
 
@@ -39,6 +50,18 @@ namespace DotnetTool.AuthenticationParameters
         /// Is authenticated with Azure AD B2C (set by reflection)
         /// </summary>
         public bool IsB2C { get; set; }
+
+
+        // TODO: propose a fix for the blazorwasm project template
+        
+        /// <summary>
+        /// Sign-up sign-in policy in the case of B2C
+        /// </summary>
+        /// <remarks>This is for the blazorwasm hosted template and more a workaround
+        /// to the template. The default name of the policy appearing in 
+        /// Client\wwwroot\appSettings.json:Authority should be the same as in 
+        /// Server\appSettings.json:AzureADB2C:SignUpSignInPolicyId </remarks>
+        public string? SusiPolicy { get; set; }
 
         /// <summary>
         /// The project has authentication

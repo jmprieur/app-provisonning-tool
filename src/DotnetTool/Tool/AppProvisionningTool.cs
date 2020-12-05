@@ -126,10 +126,7 @@ namespace DotnetTool
             if (currentApplicationParameters == null && !provisioningToolOptions.Unregister)
             {
                 currentApplicationParameters = await MicrosoftIdentityPlatformApplicationManager.CreateNewApp(tokenCredential, applicationParameters);
-                currentApplicationParameters.SecretsId = applicationParameters.SecretsId;
-                currentApplicationParameters.MsalAuthenticationOptions = applicationParameters.MsalAuthenticationOptions;
-                currentApplicationParameters.CalledApiScopes = applicationParameters.CalledApiScopes;
-                currentApplicationParameters.Instance = applicationParameters.Instance;
+
                 Console.Write($"Created app {currentApplicationParameters.ClientId}");
             }
             return currentApplicationParameters;

@@ -86,6 +86,9 @@ namespace DotnetTool.CodeReaderWriter
                 case "Directory.Domain":
                     replacement = reconcialedApplicationParameters.Domain;
                     break;
+                case "Application.SusiPolicy":
+                    replacement = reconcialedApplicationParameters.SusiPolicy;
+                    break;
                 case "Application.CallbackPath":
                     replacement = reconcialedApplicationParameters.CallbackPath;
                     break;
@@ -127,7 +130,8 @@ namespace DotnetTool.CodeReaderWriter
                         && !string.IsNullOrEmpty(reconcialedApplicationParameters.Domain)
                         && reconcialedApplicationParameters.Domain.EndsWith(".onmicrosoft.com"))
                     {
-                        replacement = "https://"+reconcialedApplicationParameters.Domain.Replace(".onmicrosoft.com", ".b2clogin.com");
+                        replacement = "https://"+reconcialedApplicationParameters.Domain.Replace(".onmicrosoft.com", ".b2clogin.com")
+                            .Replace("aadB2CInstance", reconcialedApplicationParameters.Domain1);
                     }
                     else
                     {
