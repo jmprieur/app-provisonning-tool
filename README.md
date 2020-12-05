@@ -28,11 +28,11 @@ If you want to add a AAD B2C registration you'll need a B2C tenant, and explicit
 <table>
    <tr> <td>Family of scenarios (initial state of the code)</td> <td>Scenario</td> </tr>
    <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled </td> 
-      <td>Configure the code with a new app registration</td>
+      <td><b>Supported today</b>: Configure the code with a new app registration</td>
    </tr>
-   <tr> <td>Configure the code with an existing app registration</td></tr>
-   <tr> <td>Update the app registration based on the code (or troubleshoot)</td></tr>
-   <tr> <td>ASP.NET Core web apps / apis where Authentication was not enabled </td><td> Update the code to add authentication</td>
+   <tr> <td><b>Working on it</b>: Configure the code with an existing app registration</td></tr>
+   <tr> <td><b>Working on it</b>: Update the app registration based on the code (or troubleshoot)</td></tr>
+   <tr> <td>ASP.NET Core web apps / apis where Authentication was not enabled </td><td><b>Future work</b>: Update the code to add authentication</td>
    </tr>
  </table>
 
