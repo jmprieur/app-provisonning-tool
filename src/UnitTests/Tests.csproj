@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotnetTool\DotnetTool.csproj" />
+    <ProjectReference Include="..\DotnetTool\msIdentityApp.csproj" />
   </ItemGroup>
 
 </Project>
