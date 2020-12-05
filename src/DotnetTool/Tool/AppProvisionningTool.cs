@@ -33,14 +33,24 @@ namespace DotnetTool
 
             if (projectDescription == null)
             {
-                Console.WriteLine("Unknown project type");
-                throw new Exception();
+                Console.WriteLine("Could not determine the project type");
+                return;
+            }
+            else
+            {
+                Console.WriteLine($"Detected {projectDescription.Identifier}");
             }
 
             ProjectAuthenticationSettings projectSettings = InferApplicationParameters(
                 provisioningToolOptions,
                 projectDescription,
                 projectDescriptionReader.projectDescriptions);
+
+            if (!projectSettings.ApplicationParameters.HasAuthentication)
+            {
+                Console.WriteLine($"Authentication not enabled yet in this project. An app registration will " +
+                                  $"be created, but the tool does not add yet the code (work in progress)");
+            }
 
             // Get developer credentials
             TokenCredential tokenCredential = GetTokenCredential(

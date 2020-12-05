@@ -21,7 +21,7 @@ namespace Tests
             this.testOutput = output;
         }
 
-        //[InlineData("webapp2\\webapp2-noauth", "dotnet new webapp2")]
+        [InlineData("webapp\\webapp-noauth", "dotnet new webapp")]
         [InlineData("webapp\\webapp-singleorg", "dotnet new webapp --auth SingleOrg")]
         [InlineData("webapp\\webapp-singleorg-callsgraph", "dotnet new webapp --auth SingleOrg --calls-graph")]
         [InlineData("webapp\\webapp-singleorg-callswebapi", "dotnet new webapp --auth SingleOrg --called-api-url \"https://graph.microsoft.com/beta/me\" --called-api-scopes \"user.read\"")]
