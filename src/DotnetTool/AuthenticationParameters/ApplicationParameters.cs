@@ -132,6 +132,7 @@ namespace DotnetTool.AuthenticationParameters
 
         // SecretsId of the csproj
         public string SecretsId { get; internal set; }
+        public string TargetFramework { get; internal set; }
 
         public string MsalAuthenticationOptions { get; set; }
 

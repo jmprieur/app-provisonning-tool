@@ -78,7 +78,12 @@
         {
           "Property": "Project:PropertyGroup:UserSecretsId",
           "Represents": "secretsId"
+        },
+        {
+          "Property": "Project:PropertyGroup:TargetFramework",
+          "Represents": "targetFramework"
         }
+
       ]
     },
     {

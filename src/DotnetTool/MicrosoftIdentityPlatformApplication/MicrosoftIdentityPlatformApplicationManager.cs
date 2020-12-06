@@ -47,7 +47,16 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             }
             else if (applicationParameters.IsBlazor)
             {
-                AddSpaPlatform(applicationParameters, application);
+                // In .NET Core 3.1, Blazor uses MSAL.js 1.x (web redirect URIs)
+                // whereas in .NET 5.0, Blazor uses MSAL.js 2.x (SPA redirect URIs)
+                if (applicationParameters.TargetFramework == "net5.0")
+                {
+                    AddSpaPlatform(applicationParameters, application);
+                }
+                else
+                {
+                    AddWebAppPlatform(applicationParameters, application, true);
+                }
             }
 
             var scopesPerResource = await AddApiPermissions(
@@ -105,7 +114,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 .GetAsync()).First();
 
             var effectiveApplicationParameters = GetEffectiveApplicationParameters(tenant, createdApplication, applicationParameters);
-            
+
             // Add password credentials
             if (applicationParameters.CallsMicrosoftGraph || applicationParameters.CallsDownstreamApi)
             {
@@ -119,8 +128,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         }
 
         private async Task AddApiPermissionFromBlazorwasmHostedSpaToServerApi(
-            GraphServiceClient graphServiceClient, 
-            Application createdApplication, 
+            GraphServiceClient graphServiceClient,
+            Application createdApplication,
             ServicePrincipal createdServicePrincipal,
             bool isB2C)
         {
@@ -224,7 +233,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         /// <param name="scopesPerResource"></param>
         /// <returns></returns>
         private static async Task AddAdminConsentToApiPermissions(
-            GraphServiceClient graphServiceClient, 
+            GraphServiceClient graphServiceClient,
             ServicePrincipal servicePrincipal,
             IEnumerable<IGrouping<string, ResourceAndScope>> scopesPerResource)
         {
@@ -310,16 +319,18 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         /// </summary>
         /// <param name="applicationParameters"></param>
         /// <param name="application"></param>
-        private static void AddWebAppPlatform(ApplicationParameters applicationParameters, Application application)
+        /// <param name="withImplicitFlow">Should it add the implicit flow access token (for Blazor in netcore3.1)</param>
+        private static void AddWebAppPlatform(ApplicationParameters applicationParameters, Application application, bool withImplicitFlow=false)
         {
             application.Web = new WebApplication();
 
             // IdToken
-            if (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
+            if ( (!applicationParameters.CallsDownstreamApi && !applicationParameters.CallsMicrosoftGraph)
+                || withImplicitFlow)
             {
                 application.Web.ImplicitGrantSettings = new ImplicitGrantSettings();
                 application.Web.ImplicitGrantSettings.EnableIdTokenIssuance = true;
-                if (applicationParameters.IsB2C)
+                if (applicationParameters.IsB2C || withImplicitFlow)
                 {
                     application.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = true;
                 }
@@ -496,8 +507,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
         }
 
         private ApplicationParameters GetEffectiveApplicationParameters(
-            Organization tenant, 
-            Application application, 
+            Organization tenant,
+            Application application,
             ApplicationParameters originalApplicationParameters)
         {
             bool isB2C = (tenant.TenantType == "AAD B2C");
@@ -521,9 +532,10 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 // Parameters that cannot be infered from the app
                 SusiPolicy = originalApplicationParameters.SusiPolicy,
                 SecretsId = originalApplicationParameters.SecretsId,
+                TargetFramework = originalApplicationParameters.TargetFramework,
                 MsalAuthenticationOptions = originalApplicationParameters.MsalAuthenticationOptions,
                 CalledApiScopes = originalApplicationParameters.CalledApiScopes,
-        };
+            };
 
             // Todo: might be a bit more complex in some cases for the B2C case.
             // TODO: introduce the Instance?

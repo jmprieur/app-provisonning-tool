@@ -283,6 +283,9 @@ namespace DotnetTool.CodeReaderWriter
                     case "secretsId":
                         projectAuthenticationSettings.ApplicationParameters.SecretsId = value;
                         break;
+                    case "targetFramework":
+                        projectAuthenticationSettings.ApplicationParameters.TargetFramework = value;
+                        break;
                     case "MsalAuthenticationOptions":
                         projectAuthenticationSettings.ApplicationParameters.MsalAuthenticationOptions = value;
                         break;

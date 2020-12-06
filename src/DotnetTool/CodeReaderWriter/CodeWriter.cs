@@ -100,6 +100,9 @@ namespace DotnetTool.CodeReaderWriter
                 case "secretsId":
                     replacement = reconcialedApplicationParameters.SecretsId;
                     break;
+                case "targetFramework":
+                    replacement = reconcialedApplicationParameters.TargetFramework;
+                    break;
                 case "Application.Authority":
                     replacement = reconcialedApplicationParameters.Authority;
                     // Blazor b2C
