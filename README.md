@@ -31,7 +31,7 @@ If you want to add a AAD B2C registration you'll need a B2C tenant, and explicit
 ## Scenarios
 
 <table>
-   <tr> <td>Family of scenarios (initial state of the code)</td> <td>Scenario</td> </tr>
+   <tr> <td><b>Family of scenarios (initial state of the code)</b></td> <td><b>Scenario</b></td> </tr>
    <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled </td> 
       <td><b>Supported today</b>: Configure the code with a new app registration</td>
    </tr>
@@ -95,6 +95,15 @@ Parameter | Description
 `--username <someone@domain.com>` | Needed when you are signed-in in Visual Studio, or Azure CLI with several identities. In that case username is used to disambiguate which identity to use.
 `--folder '<pathToFolder>'` | When specified, will analyze the application code in the specified folder. Otherwise analyzes the code in the current directory
 
+##### Supported frameworks
+
+The tool supports ASP.NET Core applications created with .NET 5.0 and netcoreapp3.1. In the case of netcoreapp3.1, for blazorwasm applicaitons, the redirect URI created for the app is a "Web" redirect URI (as Blazor web assembly leverages MSAL.js 1.x in netcoreapp3.1), whereas in net5.0 it's a "SPA" redirect URI (as Blazor web assembly leverages MSAL.js 2.x in net5.0) 
+
+```Shell
+dotnet new blazorwasm --auth SingleOrg --framework netcoreapp3.1
+ms-identity-app
+dotnet run -f netstandard2.1
+```
 
 #### Configure the code with an existing app registration
 
