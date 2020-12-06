@@ -3,8 +3,13 @@ Tool to create Microsoft identity platform applications in a tenant (AAD or B2C)
 
 ## Installing/Uninstalling the tool
 
-1. Build the repository
-2. Run the following in a developer command prompt in the root of the `src\DotnetTool` folder:
+1. Build the repository and create the NuGet package (from the `src\DotnetTool` folder):
+ 
+   ```Shell
+   dotnet pack
+   ```
+   
+2. Run the following in a developer command prompt in the `src\DotnetTool` folder:
    
    ```Shell
    dotnet tool install --global --add-source ./nupkg msIdentityApp
