@@ -149,11 +149,11 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 .Request()
                 .UpdateAsync(updatedApp);
 
-            if (existingApplication.RequiredResourceAccess == null
-                || existingApplication.RequiredResourceAccess.Any()
-                || existingApplication.PasswordCredentials == null
+            if (existingApplication.RequiredResourceAccess != null
+                && existingApplication.RequiredResourceAccess.Any()
+                && (existingApplication.PasswordCredentials == null
                 || !existingApplication.PasswordCredentials.Any()
-                || !existingApplication.PasswordCredentials.Any(password => string.IsNullOrEmpty(password.SecretText)))
+                || !existingApplication.PasswordCredentials.Any(password => !string.IsNullOrEmpty(password.SecretText))))
             {
                 await AddPasswordCredentials(graphServiceClient, existingApplication, reconcialedApplicationParameters);
             }
