@@ -1,5 +1,5 @@
-# app-provisonning-tool
-Tool to create Microsoft identity platform applications in a tenant (AAD or B2C) and update the configuration code of the applications
+# ms-identity-app 
+Command line tool that creates Microsoft identity platform applications in a tenant (AAD or B2C) and updates the configuration code of you ASP.NET Core applications.
 
 ## Installing/Uninstalling the tool
 
@@ -23,20 +23,20 @@ dotnet tool uninstall --global msidentityapp
 ## Pre-requisites to using the tool
 
 Have an AAD or B2C tenant (or both). 
-- If you want to add an AAD registration, you are usually already signed-in in Visual Studio in a tenant. If needed you can create your own tenant by followin the following quickstart [Setup a tenant](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant). But be sure to sign-out and sign-in from Visual Studio or Azure CLI so that this tenant is known in the shared token cache
+- If you want to add an AAD registration, you are usually already signed-in in Visual Studio in a tenant. If needed you can create your own tenant by following this quickstart [Setup a tenant](https://docs.microsoft.com/azure/active-directory/develop/quickstart-create-new-tenant). But be sure to sign-out and sign-in from Visual Studio or Azure CLI so that this tenant is known in the shared token cache.
 
-If you want to add a AAD B2C registration you'll need a B2C tenant, and explicity pass it to the --tenant-id option of the tool. To create a B2C tenant, see [Create a B2C tenant](https://docs.microsoft.com/azure/active-directory-b2c/tutorial-create-tenant)
+- If you want to add a AAD B2C registration you'll need a B2C tenant, and explicity pass it to the `--tenant-id` option of the tool. To create a B2C tenant, see [Create a B2C tenant](https://docs.microsoft.com/azure/active-directory-b2c/tutorial-create-tenant)
 
 
 ## Scenarios
 
 <table>
    <tr> <td><b>Family of scenarios (initial state of the code)</b></td> <td><b>Scenario</b></td> </tr>
-   <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled </td> 
-      <td><b>Supported today</b>: Configure the code with a new app registration</td>
+   <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled (`--auth``)</td> 
+      <td><b>Supported today</b>: Create a new app registration adn configure the code. This works for all projects (mvc, webapp, webapi, blazorserver, blazorwasm (hosted or not), and both for AAD and B2C</td>
    </tr>
-   <tr> <td><b>Working on it</b>: Configure the code with an existing app registration</td></tr>
-   <tr> <td><b>Working on it</b>: Update the app registration based on the code (or troubleshoot)</td></tr>
+   <tr> <td><b>Supported today</b>: Configure the code with an existing app registration. You need to pass-in a clientId, and the app will be configured from it.</td></tr>
+   <tr> <td><b>Partially supported today</b>: Update the app registration based on the code (or troubleshoot). For instance when you have changed the app launch URLs</td></tr>
    <tr> <td>ASP.NET Core web apps / apis where Authentication was not enabled </td><td><b>Future work</b>: Update the code to add authentication</td>
    </tr>
  </table>
