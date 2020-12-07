@@ -93,6 +93,7 @@ namespace DotnetTool.DeveloperCredentials
             }
             catch (MsalUiRequiredException ex)
             {
+                Console.WriteLine("Please re-sign-in in Visual Studio");
                 result = await app.AcquireTokenInteractive(requestContext.Scopes)
                     .WithLoginHint(Username)
                     .WithClaims(ex.Claims)

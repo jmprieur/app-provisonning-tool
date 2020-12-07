@@ -7,6 +7,7 @@ using DotnetTool.Project;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DotnetTool
@@ -68,28 +69,26 @@ namespace DotnetTool
                 tokenCredential, 
                 projectSettings.ApplicationParameters);
 
-
-
-
             // Reconciliate code configuration and app registration
-            ApplicationParameters reconcialedApplicationParameters = Reconciliate(
+            bool appNeedsUpdate = Reconciliate(
                 projectSettings.ApplicationParameters, 
                 effectiveApplicationParameters);
 
-            // Write code configuration and/or app registration
+            // Update appp registration if needed
             Summary summary = new Summary();
+            if (appNeedsUpdate)
+            {
+                await WriteApplicationRegistration(
+                    summary,
+                    effectiveApplicationParameters,
+                    tokenCredential);
+            }
+
+            // Write code configuration if needed
             WriteProjectConfiguration(
                 summary, 
                 projectSettings,
-                reconcialedApplicationParameters);
-
-            if (reconcialedApplicationParameters != effectiveApplicationParameters)
-            {
-                WriteApplicationRegistration(
-                    summary,
-                    reconcialedApplicationParameters,
-                    tokenCredential);
-            }
+                effectiveApplicationParameters);
 
             // Summarizes what happened
             WriteSummary(summary);
@@ -104,9 +103,10 @@ namespace DotnetTool
             }
         }
 
-        private void WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
+        private async Task WriteApplicationRegistration(Summary summary, ApplicationParameters reconcialedApplicationParameters, TokenCredential tokenCredential)
         {
             summary.changes.Add(new Change($"Writing the project AppId = {reconcialedApplicationParameters.ClientId}"));
+            await MicrosoftIdentityPlatformApplicationManager.UpdateApplication(tokenCredential, reconcialedApplicationParameters);
         }
 
         private void WriteProjectConfiguration(Summary summary, ProjectAuthenticationSettings projectSettings, ApplicationParameters reconcialedApplicationParameters)
@@ -115,10 +115,27 @@ namespace DotnetTool
             codeWriter.WriteConfiguration(summary, projectSettings.Replacements, reconcialedApplicationParameters);
         }
 
-        private ApplicationParameters Reconciliate(ApplicationParameters applicationParameters, ApplicationParameters effectiveApplicationParameters)
+        private bool Reconciliate(ApplicationParameters applicationParameters, ApplicationParameters effectiveApplicationParameters)
         {
-            Console.WriteLine(nameof(Reconciliate));
-            return effectiveApplicationParameters;
+            // Redirect Uris that are needed by the code, but not yet registered 
+            IEnumerable<string> missingRedirectUri = applicationParameters.WebRedirectUris.Except(effectiveApplicationParameters.WebRedirectUris);
+
+            bool needUpdate = missingRedirectUri.Any();
+
+            if (needUpdate)
+            {
+                effectiveApplicationParameters.WebRedirectUris.AddRange(missingRedirectUri);
+            }
+
+            // TODO:
+            // See also https://github.com/jmprieur/app-provisonning-tool/issues/10
+            /*
+                 string? audience = ComputeAudienceToSet(applicationParameters.SignInAudience, effectiveApplicationParameters.SignInAudience);
+                IEnumerable<ApiPermission> missingApiPermission = null;
+                IEnumerable<string> missingExposedScopes = null;
+                bool needUpdate = missingRedirectUri != null || audience != null || missingApiPermission != null || missingExposedScopes != null;
+            */
+            return needUpdate;
         }
 
         private async Task<ApplicationParameters> ReadOrProvisionMicrosoftIdentityApplication(TokenCredential tokenCredential, ApplicationParameters applicationParameters)
@@ -150,6 +167,8 @@ namespace DotnetTool
             CodeReader reader = new CodeReader();
             ProjectAuthenticationSettings projectSettings = reader.ReadFromFiles(provisioningToolOptions.CodeFolder, projectDescription, projectDescriptions);
             projectSettings.ApplicationParameters.DisplayName ??= Path.GetFileName(provisioningToolOptions.CodeFolder);
+            projectSettings.ApplicationParameters.ClientId ??= provisioningToolOptions.ClientId;
+            projectSettings.ApplicationParameters.TenantId ??= provisioningToolOptions.TenantId;
             return projectSettings;
         }
 

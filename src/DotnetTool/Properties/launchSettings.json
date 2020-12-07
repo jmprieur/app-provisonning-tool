@@ -22,6 +22,15 @@
     "webapp-singleorg-callswebapi": {
       "commandName": "Project",
       "workingDirectory": "C:\\Users\\jmprieur\\source\\repos\\github\\jmprieur\\app-provisonning-tool\\src\\UnitTests\\bin\\Debug\\net5.0\\Tests\\webapp\\webapp-singleorg-callswebapi"
+    },
+    "webapp-from-existing-app": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\temp\\test-provisionning\\Tests\\webapp\\webapp-singleorg-callsgraph",
+      "commandLineArgs": "--client-id a727877b-0e1b-475c-afac-69bbca2779f6 --tenant-id testprovisionningtool.onmicrosoft.com"
+    },
+    "update-webapp-from-existing-app": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\temp\\test-provisionning\\Tests\\webapp\\webapp-singleorg-callsgraph"
     }
   }
 }

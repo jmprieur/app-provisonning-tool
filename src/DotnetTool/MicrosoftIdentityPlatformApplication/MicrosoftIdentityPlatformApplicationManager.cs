@@ -127,6 +127,38 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             return effectiveApplicationParameters;
         }
 
+        internal async Task UpdateApplication(TokenCredential tokenCredential, ApplicationParameters reconcialedApplicationParameters)
+        {
+            var graphServiceClient = GetGraphServiceClient(tokenCredential);
+
+            var existingApplication = (await graphServiceClient.Applications
+               .Request()
+               .Filter($"appId eq '{reconcialedApplicationParameters.ClientId}'")
+               .GetAsync()).First();
+
+            // Updates the redirect URIs
+            var updatedApp = new Application
+            {
+                Web = existingApplication.Web
+            };
+            updatedApp.Web.RedirectUris = reconcialedApplicationParameters.WebRedirectUris;
+
+            // TODO: update other fields. 
+            // See https://github.com/jmprieur/app-provisonning-tool/issues/10
+            await graphServiceClient.Applications[existingApplication.Id]
+                .Request()
+                .UpdateAsync(updatedApp);
+
+            if (existingApplication.RequiredResourceAccess == null
+                || existingApplication.RequiredResourceAccess.Any()
+                || existingApplication.PasswordCredentials == null
+                || !existingApplication.PasswordCredentials.Any()
+                || !existingApplication.PasswordCredentials.Any(password => string.IsNullOrEmpty(password.SecretText)))
+            {
+                await AddPasswordCredentials(graphServiceClient, existingApplication, reconcialedApplicationParameters);
+            }
+        }
+
         private async Task AddApiPermissionFromBlazorwasmHostedSpaToServerApi(
             GraphServiceClient graphServiceClient,
             Application createdApplication,
@@ -253,6 +285,8 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                         Scope = string.Join(" ", resourceAndScopes.Select(r => r.Scope))
                     };
 
+                    // TODO: See https://github.com/jmprieur/app-provisonning-tool/issues/9. 
+                    // We need to process the case where the developer is not a tenant admin
                     await graphServiceClient.Oauth2PermissionGrants
                         .Request()
                         .AddAsync(oAuth2PermissionGrant);
@@ -525,11 +559,11 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                 IsWebApp = application.Web != null,
                 TenantId = tenant.Id,
                 Domain = tenant.VerifiedDomains.FirstOrDefault(v => v.IsDefault.HasValue && v.IsDefault.Value)?.Name,
-                CallsMicrosoftGraph = application.RequiredResourceAccess.Any(r => r.ResourceAppId == MicrosoftGraphAppId),
+                CallsMicrosoftGraph = application.RequiredResourceAccess.Any(r => r.ResourceAppId == MicrosoftGraphAppId) && !isB2C,
                 CallsDownstreamApi = application.RequiredResourceAccess.Any(r => r.ResourceAppId != MicrosoftGraphAppId),
                 LogoutUrl = application.Web?.LogoutUrl,
 
-                // Parameters that cannot be infered from the app
+                // Parameters that cannot be infered from the registered app
                 SusiPolicy = originalApplicationParameters.SusiPolicy,
                 SecretsId = originalApplicationParameters.SecretsId,
                 TargetFramework = originalApplicationParameters.TargetFramework,
