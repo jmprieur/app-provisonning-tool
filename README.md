@@ -12,12 +12,12 @@ Command line tool that creates Microsoft identity platform applications in a ten
 2. Run the following in a developer command prompt in the `src\DotnetTool` folder:
    
    ```Shell
-   dotnet tool install --global --add-source ./nupkg msIdentityApp
+   dotnet tool install --global --add-source ./nupkg ms-identity-app
    ```
 
 If later you want to uninstall the tool, just run:
 ```Shell
-dotnet tool uninstall --global msidentityapp
+dotnet tool uninstall --global ms-identity-app
 ```
 
 ## Pre-requisites to using the tool
