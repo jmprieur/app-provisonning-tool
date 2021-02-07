@@ -61,16 +61,8 @@ namespace Tests
             {
                 Directory.SetCurrentDirectory(folderToCreate);
 
-                List<string> args = new List<string>();
-                if (folder.Contains("b2c"))
-                {
-                    args.Add("--tenant-id");
-                    args.Add("fabrikamb2c.onmicrosoft.com");
-                }
-                args.Add("--unregister");
-                args.Add("true");
-
-                await Program.Main(args.ToArray());
+                string tenantId = folder.Contains("b2c") ? "fabrikamb2c.onmicrosoft.com" : null;
+                await Program.Main(tenantId: tenantId, unregister:true);
             }
             finally
             {

@@ -121,7 +121,7 @@ namespace DotnetTool.Project
                 return;
             }
 
-            var properties = typeof(msIdentityApp.Properties.Resources).GetProperties(BindingFlags.Static | BindingFlags.NonPublic)
+            var properties = typeof(Microsoft.Identity.App.Properties.Resources).GetProperties(BindingFlags.Static | BindingFlags.NonPublic)
                 .Where(p => p.PropertyType == typeof(byte[]))
                 .ToArray();
             foreach (PropertyInfo propertyInfo in properties)

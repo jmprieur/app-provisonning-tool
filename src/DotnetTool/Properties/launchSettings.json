@@ -1,5 +1,10 @@
 {
   "profiles": {
+    "DotnetTool from demo folder": {
+      "commandName": "Project",
+      "commandLineArgs": "",
+      "workingDirectory": "C:\\Users\\jmprieur\\demo"
+    },
     "DotnetTool-webapp calls graph": {
       "commandName": "Project",
       "commandLineArgs": "--tenant-id testprovisionningtool.onmicrosoft.com",

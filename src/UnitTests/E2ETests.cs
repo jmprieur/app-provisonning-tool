@@ -84,18 +84,10 @@ namespace Tests
             try
             {
                 Directory.SetCurrentDirectory(folderToCreate);
-
-                List<string> args = new List<string>();
-                args.Add("--tenant-id");
-                if (folder.Contains("b2c"))
-                {
-                    args.Add("fabrikamb2c.onmicrosoft.com");
-                }
-                else
-                {
-                    args.Add("testprovisionningtool.onmicrosoft.com");
-                }
-                await Program.Main(args.ToArray());
+                string tenantId = folder.Contains("b2c") ?
+                    "fabrikamb2c.onmicrosoft.com" :
+                    "testprovisionningtool.onmicrosoft.com";
+                await Program.Main(tenantId:tenantId);
             }
             catch (Exception ex)
             {
@@ -197,17 +189,11 @@ namespace Tests
             {
                 Directory.SetCurrentDirectory(folderToCreate);
 
-                List<string> args = new List<string>();
-                args.Add("--tenant-id");
-                if (folder.Contains("b2c"))
-                {
-                    args.Add("fabrikamb2c.onmicrosoft.com");
-                }
-                else
-                {
-                    args.Add("testprovisionningtool.onmicrosoft.com");
-                }
-                await Program.Main(args.ToArray());
+                Directory.SetCurrentDirectory(folderToCreate);
+                string tenantId = folder.Contains("b2c") ?
+                    "fabrikamb2c.onmicrosoft.com" :
+                    "testprovisionningtool.onmicrosoft.com";
+                await Program.Main(tenantId: tenantId);
             }
             catch (Exception ex)
             {
