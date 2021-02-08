@@ -55,6 +55,46 @@ If you use PowerShell, or Bash, you can also get the completion in the shell, pr
 
 ## Scenarios
 
+
+### Registering a new AAD app and configuring the code using your dev credentials
+
+<table>
+ <tr>
+  <td>
+   <code>
+dotnet new webapp --auth SingleOrg
+    
+ms-identity-app
+   </code>
+  </td>
+  <td>Creates a new app <b>in your home tenant</b> and updates code</td>
+ </tr>
+ 
+ <tr>
+  <td>
+   <code>
+dotnet new webapp --auth SingleOrg
+
+ms-identity-app --tenant-id testprovisionningtool.onmicrosoft.com
+   </code>
+  </td>
+  <td>Creates a new app <b>in a different tenant</b> and updates code</td>
+ </tr> 
+ 
+  <tr>
+  <td>
+   <code>
+dotnet new webapp --auth SingleOrg
+
+ms-identity-app --username username@domain.com
+   </code>
+  </td>
+  <td>Creates a new app <b>using a different identity</b> and updates code</td>
+ </tr> 
+ 
+ </table>
+ 
+
 <table>
    <tr> <td><b>Family of scenarios (initial state of the code)</b></td> <td><b>Scenario</b></td> </tr>
    <tr> <td rowspan="3">ASP.NET Core web apps / apis where Authentication was enabled (`--auth``)</td> 
