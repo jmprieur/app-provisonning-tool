@@ -8,46 +8,41 @@ namespace DotnetTool
     public static class Program
     {
         /// <summary>
-        /// Mapping between the command line and the ProvisionningToolOptions
+        /// Creates or updates an AzureAD/Azure AD B2C application, and updates the code, using
+        /// the developer credentials (Visual Studio, Azure CLI, Azure RM PowerShell, VS Code)
         /// </summary>
-        private static Dictionary<string, string> mapping = new Dictionary<string, string>
-            {
-                {"--folder", nameof(ProvisioningToolOptions.CodeFolder)},
-                {"--language-framework", nameof(ProvisioningToolOptions.LanguageOrFramework)},
-                {"--username", nameof(ProvisioningToolOptions.Username)},
-                {"--client-secret", nameof(ProvisioningToolOptions.ClientSecret)},
-                {"--client-id", nameof(ProvisioningToolOptions.ClientId)},
-                {"--tenant-id", nameof(ProvisioningToolOptions.TenantId)},
-                {"--project-type", nameof(ProvisioningToolOptions.ProjectType)},
-                {"--unregister", nameof(ProvisioningToolOptions.Unregister)},
-            };
-   
-        static public async Task Main(string[] args)
+        /// <param name="tenantId">Azure AD or Azure AD B2C tenant in which to create/update the app. By default
+        /// this will be your home tenant ID</param>
+        /// <param name="username">Username to use to connect to the Azure AD or Azure AD B2C tenant.
+        /// By default this will be your home user id</param>
+        /// <param name="folder">Folder in which to look at the code. By default the current folder</param>
+        /// <param name="clientId">Client ID of an existing application from which to update the code.</param>
+        /// <param name="clientSecret">Client secret to use as a client credential</param>
+        /// <param name="unregister">Unregister the application, instead of registering it</param>
+        /// <returns></returns>
+        static public async Task Main(
+            string tenantId = null,
+            string username = null,
+            string clientId = null,
+            bool unregister = false,
+            string folder = null,
+            string clientSecret = null)
         {
             // Read options
-            ProvisioningToolOptions provisioningToolOptions = GetOptions(args);
+            ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions
+            {
+                Username = username,
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                TenantId = tenantId
+            };
+            if (folder!=null)
+            {
+                provisioningToolOptions.CodeFolder = folder;
+            }
 
             AppProvisionningTool appProvisionningTool = new AppProvisionningTool(provisioningToolOptions);
             await appProvisionningTool.Run();
-        }
-
-        /// <summary>
-        /// Get the options from the command line
-        /// </summary>
-        /// <param name="args">Command line arguments</param>
-        /// <returns>Provisionning tool options</returns>
-        private static ProvisioningToolOptions GetOptions(string[] args)
-        {
-            ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-            configurationBuilder.AddCommandLine(args, mapping);
-            IConfiguration configuration = configurationBuilder.Build();
-            ProvisioningToolOptions provisioningToolOptions = new ProvisioningToolOptions();
-            ConfigurationBinder.Bind(configuration, provisioningToolOptions);
-
-            bool help = args.Any(arg => !arg.StartsWith("--help"));
-            provisioningToolOptions.Help = help;
-
-            return provisioningToolOptions;
         }
 
         public static void GenerateTests()
