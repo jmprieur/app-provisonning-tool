@@ -28,6 +28,31 @@ Have an AAD or B2C tenant (or both).
 - If you want to add a AAD B2C registration you'll need a B2C tenant, and explicity pass it to the `--tenant-id` option of the tool. To create a B2C tenant, see [Create a B2C tenant](https://docs.microsoft.com/azure/active-directory-b2c/tutorial-create-tenant)
 
 
+## Using the tool
+
+```text
+ms-identity-app:
+  Creates or updates an AzureAD/Azure AD B2C application, and updates the code, using
+   the developer credentials (Visual Studio, Azure CLI, Azure RM PowerShell, VS Code)
+
+Usage:
+  ms-identity-app [options]
+
+Options:
+  --tenant-id <tenant-id>            Azure AD or Azure AD B2C tenant in which to create/update the app. By default
+                                      this will be your home tenant ID [default: ]
+  --username <username>              Username to use to connect to the Azure AD or Azure AD B2C tenant.
+                                      By default this will be your home user id [default: ]
+  --client-id <client-id>            Client ID of an existing application from which to update the code. [default: ]
+  --unregister                       Unregister the application, instead of registering it [default: False]
+  --folder <folder>                  Folder in which to look at the code. By default the current folder [default: ]
+  --client-secret <client-secret>    Client secret to use as a client credential [default: ]
+  --version                          Show version information
+  -?, -h, --help                     Show help and usage information
+```
+
+If you use PowerShell, or Bash, you can also get the completion in the shell, provivided you install [dotnet-suggest](https://www.nuget.org/packages/dotnet-suggest/). See https://github.com/dotnet/command-line-api/blob/main/docs/dotnet-suggest.md on how to configure the shell so that it leverages dotnet-suggest.
+
 ## Scenarios
 
 <table>
