@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace DotnetTool.AuthenticationParameters
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class ApplicationParameters
     {
         /// <summary>
@@ -15,6 +18,9 @@ namespace DotnetTool.AuthenticationParameters
         /// </summary>
         public string? TenantId { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string? Domain { get; set; }
 
         /// <summary>
@@ -28,7 +34,14 @@ namespace DotnetTool.AuthenticationParameters
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string? Authority { get; set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public string? Instance { get; set; }
 
         /// <summary>
@@ -96,7 +109,7 @@ namespace DotnetTool.AuthenticationParameters
         /// <summary>
         /// Scopes used to call the downsteam API, if any
         /// </summary>
-        public string CalledApiScopes { get; set; }
+        public string? CalledApiScopes { get; set; }
 
         /// <summary>
         /// Web app redirect URIs
@@ -113,6 +126,9 @@ namespace DotnetTool.AuthenticationParameters
         /// </summary>
         public string? LogoutUrl { set; get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public List<string> PasswordCredentials { get; } = new List<string>();
 
         /// <summary>
@@ -130,15 +146,20 @@ namespace DotnetTool.AuthenticationParameters
         /// </summary>
         public string? Description { get; set; }
 
-        // SecretsId of the csproj
-        public string SecretsId { get; internal set; }
-        public string TargetFramework { get; internal set; }
+        /// <summary>
+        /// SecretsId of the csproj
+        /// </summary>
+        public string? SecretsId { get; internal set; }
 
-        public string MsalAuthenticationOptions { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? TargetFramework { get; internal set; }
 
-
-
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? MsalAuthenticationOptions { get; set; }
 
         /// <summary>
         /// Sets a bool propery (from its name)

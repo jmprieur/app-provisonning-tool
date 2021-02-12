@@ -69,7 +69,7 @@ namespace DotnetTool.DeveloperCredentials
             }
             return App;
         }
-
+        
         public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
         {
             var app = await GetOrCreateApp();
