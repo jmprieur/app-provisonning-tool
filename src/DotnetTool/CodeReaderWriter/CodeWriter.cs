@@ -18,7 +18,7 @@ namespace DotnetTool.CodeReaderWriter
                 bool updated = false;
                 foreach (Replacement r in replacementsInFile.OrderByDescending(r => r.Index))
                 {
-                    string replaceBy = ComputeReplacement(r.ReplaceBy, reconcialedApplicationParameters);
+                    string? replaceBy = ComputeReplacement(r.ReplaceBy, reconcialedApplicationParameters);
                     if (replaceBy != null && replaceBy!=r.ReplaceFrom)
                     {
                         int index = fileContent.IndexOf(r.ReplaceFrom /*, r.Index*/);
@@ -45,31 +45,35 @@ namespace DotnetTool.CodeReaderWriter
             }
         }
 
-        private string ComputeReplacement(string replaceBy, ApplicationParameters reconcialedApplicationParameters)
+        private string? ComputeReplacement(string replaceBy, ApplicationParameters reconciledApplicationParameters)
         {
-            string replacement = replaceBy;
+            string? replacement = replaceBy;
             switch(replaceBy)
             {
                 case "Application.ClientSecret":
-                    string password = reconcialedApplicationParameters.PasswordCredentials.LastOrDefault();
-                    if (!string.IsNullOrEmpty(reconcialedApplicationParameters.SecretsId))
+                    string password = reconciledApplicationParameters.PasswordCredentials.LastOrDefault();
+                    if (!string.IsNullOrEmpty(reconciledApplicationParameters.SecretsId))
                     {
                         // TODO: adapt for Linux: https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-5.0&tabs=windows#how-the-secret-manager-tool-works
-                        string path = Path.Combine(
-                            Environment.GetEnvironmentVariable("UserProfile"),
-                            @"AppData\Roaming\Microsoft\UserSecrets\",
-                            reconcialedApplicationParameters.SecretsId,
-                            "secrets.json");
-                        if (!File.Exists(path))
+                        string? envVariable = Environment.GetEnvironmentVariable("UserProfile");
+                        if (!string.IsNullOrEmpty(envVariable))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(path));
-                            string section = reconcialedApplicationParameters.IsB2C ? "AzureADB2C" : "AzureAD";
-                            File.WriteAllText(path, $"{{\n    \"{section}:ClientSecret\": \"{password}\"\n}}");
-                            replacement = "See user secrets";
-                        }
-                        else
-                        {
-                            replacement = password;
+                            string path = Path.Combine(
+                                envVariable,
+                                @"AppData\Roaming\Microsoft\UserSecrets\",
+                                reconciledApplicationParameters.SecretsId,
+                                "secrets.json");
+                            if (!File.Exists(path))
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                                string section = reconciledApplicationParameters.IsB2C ? "AzureADB2C" : "AzureAD";
+                                File.WriteAllText(path, $"{{\n    \"{section}:ClientSecret\": \"{password}\"\n}}");
+                                replacement = "See user secrets";
+                            }
+                            else
+                            {
+                                replacement = password;
+                            }
                         }
                     }
                     else
@@ -78,19 +82,19 @@ namespace DotnetTool.CodeReaderWriter
                     }
                     break;
                 case "Application.ClientId":
-                    replacement = reconcialedApplicationParameters.ClientId;
+                    replacement = reconciledApplicationParameters.ClientId;
                     break;
                 case "Directory.TenantId":
-                    replacement = reconcialedApplicationParameters.TenantId;
+                    replacement = reconciledApplicationParameters.TenantId;
                     break;
                 case "Directory.Domain":
-                    replacement = reconcialedApplicationParameters.Domain;
+                    replacement = reconciledApplicationParameters.Domain;
                     break;
                 case "Application.SusiPolicy":
-                    replacement = reconcialedApplicationParameters.SusiPolicy;
+                    replacement = reconciledApplicationParameters.SusiPolicy;
                     break;
                 case "Application.CallbackPath":
-                    replacement = reconcialedApplicationParameters.CallbackPath;
+                    replacement = reconciledApplicationParameters.CallbackPath;
                     break;
                 case "profilesApplicationUrls":
                 case "iisSslPort":
@@ -98,22 +102,22 @@ namespace DotnetTool.CodeReaderWriter
                     replacement = null;
                     break;
                 case "secretsId":
-                    replacement = reconcialedApplicationParameters.SecretsId;
+                    replacement = reconciledApplicationParameters.SecretsId;
                     break;
                 case "targetFramework":
-                    replacement = reconcialedApplicationParameters.TargetFramework;
+                    replacement = reconciledApplicationParameters.TargetFramework;
                     break;
                 case "Application.Authority":
-                    replacement = reconcialedApplicationParameters.Authority;
+                    replacement = reconciledApplicationParameters.Authority;
                     // Blazor b2C
-                    replacement = replacement.Replace("onmicrosoft.com.b2clogin.com", "b2clogin.com");
+                    replacement = replacement?.Replace("onmicrosoft.com.b2clogin.com", "b2clogin.com");
 
                     break;
                 case "MsalAuthenticationOptions":
                     // Todo generalize with a directive: Ensure line after line, or ensure line
                     // between line and line
-                    replacement = reconcialedApplicationParameters.MsalAuthenticationOptions;
-                    if (!reconcialedApplicationParameters.IsWebApi)
+                    replacement = reconciledApplicationParameters.MsalAuthenticationOptions;
+                    if (!reconciledApplicationParameters.IsWebApi)
                     {
                         replacement +=
                             "\n                options.ProviderOptions.DefaultAccessTokenScopes.Add(\"User.Read\");";
@@ -121,24 +125,24 @@ namespace DotnetTool.CodeReaderWriter
                     }                    
                     break;
                 case "Application.CalledApiScopes":
-                    replacement = reconcialedApplicationParameters.CalledApiScopes
+                    replacement = reconciledApplicationParameters.CalledApiScopes
                         .Replace("openid", string.Empty)
                         .Replace("offline_access", string.Empty)
                         .Trim();
                     break;
 
                 case "Application.Instance":
-                    if (reconcialedApplicationParameters.Instance == "https://login.microsoftonline.com/tfp/"
-                        && reconcialedApplicationParameters.IsB2C
-                        && !string.IsNullOrEmpty(reconcialedApplicationParameters.Domain)
-                        && reconcialedApplicationParameters.Domain.EndsWith(".onmicrosoft.com"))
+                    if (reconciledApplicationParameters.Instance == "https://login.microsoftonline.com/tfp/"
+                        && reconciledApplicationParameters.IsB2C
+                        && !string.IsNullOrEmpty(reconciledApplicationParameters.Domain)
+                        && reconciledApplicationParameters.Domain.EndsWith(".onmicrosoft.com"))
                     {
-                        replacement = "https://"+reconcialedApplicationParameters.Domain.Replace(".onmicrosoft.com", ".b2clogin.com")
-                            .Replace("aadB2CInstance", reconcialedApplicationParameters.Domain1);
+                        replacement = "https://"+reconciledApplicationParameters.Domain.Replace(".onmicrosoft.com", ".b2clogin.com")
+                            .Replace("aadB2CInstance", reconciledApplicationParameters.Domain1);
                     }
                     else
                     {
-                        replacement = reconcialedApplicationParameters.Instance;
+                        replacement = reconciledApplicationParameters.Instance;
                     }
                     break;
                 default:

@@ -428,7 +428,7 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
             // Keep the service principal ID for later
             foreach (ResourceAndScope r in g)
             {
-                r.ResourceServicePrincipalId = spWithScopes?.Id;
+                r.ResourceServicePrincipalId = spWithScopes.Id;
             }
 
             IEnumerable<string> scopes = g.Select(r => r.Scope.ToLower());
@@ -446,7 +446,6 @@ namespace DotnetTool.MicrosoftIdentityPlatformApplication
                  }))
             };
             apiRequests.Add(requiredResourceAccess);
-
         }
 
         /// <summary>

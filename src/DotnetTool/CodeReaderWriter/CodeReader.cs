@@ -11,32 +11,52 @@ using ConfigurationProperties = DotnetTool.Project.ConfigurationProperties;
 
 namespace DotnetTool.CodeReaderWriter
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class CodeReader
     {
-        static JsonSerializerOptions serializerOptionsWithComments = new JsonSerializerOptions()
+        static readonly JsonSerializerOptions serializerOptionsWithComments = new JsonSerializerOptions()
         {
             ReadCommentHandling = JsonCommentHandling.Skip
         };
 
-        public ProjectAuthenticationSettings ReadFromFiles(string folderToConfigure, ProjectDescription projectDescription, IEnumerable<ProjectDescription> projectDescriptions)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="folderToConfigure"></param>
+        /// <param name="projectDescription"></param>
+        /// <param name="projectDescriptions"></param>
+        /// <returns></returns>
+        public ProjectAuthenticationSettings ReadFromFiles(
+            string folderToConfigure,
+            ProjectDescription projectDescription,
+            IEnumerable<ProjectDescription> projectDescriptions)
         {
             ProjectAuthenticationSettings projectAuthenticationSettings = new ProjectAuthenticationSettings(projectDescription);
-            ProcessProject(folderToConfigure, projectDescription, projectAuthenticationSettings, projectDescriptions);
+            ProcessProject(
+                folderToConfigure,
+                projectDescription,
+                projectAuthenticationSettings,
+                projectDescriptions);
             return projectAuthenticationSettings;
         }
 
-        private static void ProcessProject(string folderToConfigure, ProjectDescription projectDescription, ProjectAuthenticationSettings projectAuthenticationSettings, IEnumerable<ProjectDescription> projectDescriptions)
+        private static void ProcessProject(
+            string folderToConfigure,
+            ProjectDescription projectDescription,
+            ProjectAuthenticationSettings projectAuthenticationSettings,
+            IEnumerable<ProjectDescription> projectDescriptions)
         {
             string projectPath = Path.Combine(folderToConfigure, projectDescription.ProjectRelativeFolder!);
 
-            // Do DO get all the project descriptions
+            // TO-DO get all the project descriptions
             var properties = projectDescription.GetMergedConfigurationProperties(projectDescriptions).ToArray();
             foreach (ConfigurationProperties configurationProperties in properties)
             {
                 string filePath = Directory.EnumerateFiles(projectPath, configurationProperties.FileRelativePath!).FirstOrDefault();
                 ProcessFile(projectAuthenticationSettings, filePath, configurationProperties);
             }
-
 
             foreach (var matchesForProjectType in projectDescription.GetMergedMatchesForProjectType(projectDescriptions))
             {
@@ -97,7 +117,7 @@ namespace DotnetTool.CodeReaderWriter
                     .Where(u => u.StartsWith("https://"));
                 launchUrls.AddRange(httpsProfileLaunchUrls);
 
-                // Set the Web redirect URIS
+                // Set the web redirect URIs
                 List<string> redirectUris = projectAuthenticationSettings.ApplicationParameters.WebRedirectUris;
                 redirectUris.AddRange(launchUrls.Select(l => l + callbackPath));
 
@@ -124,13 +144,16 @@ namespace DotnetTool.CodeReaderWriter
             }
         }
 
-        private static void ProcessFile(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, ConfigurationProperties file)
+        private static void ProcessFile(
+            ProjectAuthenticationSettings projectAuthenticationSettings,
+            string filePath,
+            ConfigurationProperties file)
         {
             if (File.Exists(filePath))
             {
-                string fileContent = System.IO.File.ReadAllText(filePath);
-                JsonElement jsonContent = default(JsonElement);
-                XmlDocument xmlDocument = null;
+                string fileContent = File.ReadAllText(filePath);
+                JsonElement jsonContent = default;
+                XmlDocument? xmlDocument = null;
 
                 if (filePath.EndsWith(".json"))
                 {
@@ -145,8 +168,8 @@ namespace DotnetTool.CodeReaderWriter
 
                 foreach (PropertyMapping propertyMapping in file.Properties)
                 {
-                    bool found = false;
-                    string property = propertyMapping.Property;
+                    bool found = false;                    
+                    string? property = propertyMapping.Property;
                     if (property != null)
                     {
                         string[] path = property.Split(':');
@@ -161,7 +184,12 @@ namespace DotnetTool.CodeReaderWriter
                                 found = true;
                                 string replaceFrom = element.ValueKind == JsonValueKind.Number ? element.GetInt32().ToString(CultureInfo.InvariantCulture) : element.ToString();
 
-                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, index, replaceFrom);
+                                UpdatePropertyRepresents(
+                                    projectAuthenticationSettings,
+                                    filePath,
+                                    propertyMapping,
+                                    index,
+                                    replaceFrom);
                             }
                         }
 
@@ -170,7 +198,12 @@ namespace DotnetTool.CodeReaderWriter
                             XmlNode node = FindMatchingElement(xmlDocument, path);
                             if (node!=null)
                             {
-                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, 0, node.InnerText);
+                                UpdatePropertyRepresents(
+                                    projectAuthenticationSettings,
+                                    filePath,
+                                    propertyMapping,
+                                    0,
+                                    node.InnerText);
                             }
                         }
                         else
@@ -178,7 +211,12 @@ namespace DotnetTool.CodeReaderWriter
                             int index = fileContent.IndexOf(property);
                             if (index != -1)
                             {
-                                UpdatePropertyRepesents(projectAuthenticationSettings, filePath, propertyMapping, 0, property);
+                                UpdatePropertyRepresents(
+                                    projectAuthenticationSettings,
+                                    filePath,
+                                    propertyMapping,
+                                    0,
+                                    property);
                             }
                         }
                     }
@@ -193,26 +231,45 @@ namespace DotnetTool.CodeReaderWriter
             }
         }
 
-        private static void UpdatePropertyRepesents(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, PropertyMapping propertyMapping, int index, string replaceFrom)
+        private static void UpdatePropertyRepresents(
+            ProjectAuthenticationSettings projectAuthenticationSettings,
+            string filePath,
+            PropertyMapping propertyMapping,
+            int index,
+            string replaceFrom)
         {
             if (!string.IsNullOrEmpty(propertyMapping.Represents))
             {
-                ReadCodeSetting(propertyMapping.Represents, replaceFrom, propertyMapping.Default, projectAuthenticationSettings);
+                ReadCodeSetting(
+                    propertyMapping.Represents,
+                    replaceFrom,
+                    propertyMapping.Default,
+                    projectAuthenticationSettings);
                 int length = replaceFrom.Length;
 
-                AddReplacement(projectAuthenticationSettings, filePath, index, length, replaceFrom, propertyMapping.Represents);
+                AddReplacement(
+                    projectAuthenticationSettings,
+                    filePath,
+                    index,
+                    length,
+                    replaceFrom,
+                    propertyMapping.Represents);
             }
         }
 
         /// <summary>
-        /// Recursively finds the JSon elements matching the path
+        /// Recursively finds the Json elements matching the path
         /// </summary>
         /// <param name="parentElement">parent JsonElement</param>
-        /// <param name="path">JSon path to match. Note that "*" can be used to match anything
+        /// <param name="path">Json path to match. Note that "*" can be used to match anything
         /// (for example path representing "profiles:*:applicationUrl" in an appsettings.json to 
         /// get all the redirect URIs)</param>
+        /// <param name="offset"></param>
         /// <returns>An enumeration of JSonElement matching the path</returns>
-        private static IEnumerable<KeyValuePair<JsonElement, int>> FindMatchingElements(JsonElement parentElement, IEnumerable<string> path, int offset)
+        private static IEnumerable<KeyValuePair<JsonElement, int>> FindMatchingElements(
+            JsonElement parentElement,
+            IEnumerable<string> path,
+            int offset)
         {
             if (path.Any())
             {
@@ -247,7 +304,11 @@ namespace DotnetTool.CodeReaderWriter
             return node;
         }
 
-        private static void ReadCodeSetting(string represents, string value, string? defaultValue, ProjectAuthenticationSettings projectAuthenticationSettings)
+        private static void ReadCodeSetting(
+            string represents,
+            string value,
+            string? defaultValue,
+            ProjectAuthenticationSettings projectAuthenticationSettings)
         {
             if (value != defaultValue)
             {
@@ -268,7 +329,7 @@ namespace DotnetTool.CodeReaderWriter
                         if (!string.IsNullOrEmpty(value))
                         {
                             Uri authority = new Uri(value);
-                            string tenantOrDomain = authority.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+                            string? tenantOrDomain = authority.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
                             if (tenantOrDomain == "qualified.domain.name")
                             {
                                 tenantOrDomain = null;
@@ -289,15 +350,12 @@ namespace DotnetTool.CodeReaderWriter
                     case "MsalAuthenticationOptions":
                         projectAuthenticationSettings.ApplicationParameters.MsalAuthenticationOptions = value;
                         break;
-
                     case "Application.CalledApiScopes":
                         projectAuthenticationSettings.ApplicationParameters.CalledApiScopes = value;
                         break;
-
                     case "Application.Instance":
                         projectAuthenticationSettings.ApplicationParameters.Instance = value;
                         break;
-
                     case "Application.SusiPolicy":
                         projectAuthenticationSettings.ApplicationParameters.SusiPolicy = value;
                         break;
@@ -313,7 +371,13 @@ namespace DotnetTool.CodeReaderWriter
             return (int)_idx;
         }
 
-        private static void AddReplacement(ProjectAuthenticationSettings projectAuthenticationSettings, string filePath, int index, int length, string replaceFrom, string replaceBy)
+        private static void AddReplacement(
+            ProjectAuthenticationSettings projectAuthenticationSettings,
+            string filePath,
+            int index,
+            int length,
+            string replaceFrom,
+            string replaceBy)
         {
             projectAuthenticationSettings.Replacements.Add(new Replacement(filePath, index, length, replaceFrom, replaceBy));
         }
